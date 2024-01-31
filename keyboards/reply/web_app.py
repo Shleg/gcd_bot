@@ -1,7 +1,7 @@
 import json
 import urllib.parse
 
-from database.data import DEFAULT_SPEC_DICT, DEFAULT_CITY_DICT, DEFAULT_DRUGS_DICT, DEFAULT_METHODS_DICT, DEFAULT_SPEC
+from database.data import DEFAULT_SPEC_DICT, DEFAULT_CITY_DICT, DEFAULT_DRUGS_DICT, DEFAULT_METHODS_DICT
 from database.config_data import BOT_FORM
 
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton, WebAppInfo

@@ -1,1 +1,1 @@
-from . import role
+from . import inline

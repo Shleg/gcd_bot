@@ -49,7 +49,7 @@ def request_condition() -> InlineKeyboardMarkup:
 
 def request_phase() -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup()
-    for phase in DEFAULT_PHASES_DICT.keys()[::-1]:
+    for phase in list(DEFAULT_PHASES_DICT.keys())[::-1]:
         keyboard.add(
             InlineKeyboardButton(phase, callback_data=f'phase:{phase}')
         )

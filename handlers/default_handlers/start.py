@@ -1,9 +1,9 @@
 from telebot.types import Message
 
-from database.config_data import COLLECTION_USERS, USER_CHAT_ID, USER_TG_NAME, USER_STATE
-from database.data import query_data_items, get_data_item, save_data_item
-from database.survey_text import WELCOME_TEXT, RETURN_TEXT, ROLE_TEXT
-from keyboards.inline.role import request_role
+from database.config_data import COLLECTION_USERS, USER_CHAT_ID, USER_TG_NAME, USER_STATE, USER_ROLE_IDs
+from database.data import query_data_items, get_data_item, save_data_item, query_referenced_data_items
+from database.survey_text import WELCOME_TEXT, RETURN_TEXT, ROLE_TEXT, ADMIN_TEXT
+from keyboards.inline.inline import request_role
 from loader import bot
 from states.user_states import UserInfoState
 
@@ -23,6 +23,7 @@ def bot_start(message: Message):
     }
 
     request = query_data_items(request_body)
+
     chat_id_list = [chat_id['data']['tgChatId'] for chat_id in request['dataItems']]
     user_id = None
 
@@ -42,12 +43,23 @@ def bot_start(message: Message):
                 data['name'] = user['dataItem']['data'].get('doctorName')
                 data['tg_name'] = user['dataItem']['data']['tgName']
                 data['chat_id'] = user['dataItem']['data']['tgChatId']
-                #data['state'] = user['dataItem']['data'].get('newField')
+                # data['state'] = user['dataItem']['data'].get('newField')
 
-            bot.send_message(
-                message.chat.id, RETURN_TEXT.format(data.get("tg_name")))
+            request_body = {
+                "dataCollectionId": COLLECTION_USERS,
+                "referringItemFieldName": USER_ROLE_IDs,
+                "referringItemId": data.get('id')
+            }
 
-            bot.send_message(message.chat.id, ROLE_TEXT, reply_markup=request_role())
+            data['roles'] = [role.get('dataItem').get('data').get('roleName') for role in
+                             query_referenced_data_items(request_body)['results']]
+
+            if 'Менеджер бота' in data.get('roles'):
+                bot.send_message(message.chat.id, ADMIN_TEXT.format(message.from_user.full_name))
+            else:
+                bot.send_message(
+                    message.chat.id, RETURN_TEXT.format(data.get("tg_name")))
+                bot.send_message(message.chat.id, ROLE_TEXT, reply_markup=request_role())
 
             # user_state = string_to_state(data['state'])
             # bot.set_state(message.from_user.id, user_state, message.chat.id)
@@ -62,7 +74,7 @@ def bot_start(message: Message):
                 "data": {
                     USER_TG_NAME: message.from_user.username,
                     USER_CHAT_ID: message.chat.id,
-                    #USER_STATE: bot.get_state(message.from_user.id)
+                    # USER_STATE: bot.get_state(message.from_user.id)
                 }
             }
         }
@@ -73,7 +85,7 @@ def bot_start(message: Message):
             data['_id'] = new_user['dataItem']['data']['_id']
             data['chat_id'] = new_user['dataItem']['data']['tgChatId']
             data['tg_name'] = new_user['dataItem']['data']['tgName']
-            #data['state'] = bot.get_state(message.from_user.id)
+            # data['state'] = bot.get_state(message.from_user.id)
 
         bot.send_message(message.chat.id, ROLE_TEXT, reply_markup=request_role())
 

@@ -6,13 +6,14 @@ from telebot import types
 from telebot.types import Message
 
 from database.config_data import COLLECTION_USERS, USER_SPEC_IDs, USER_PREF_CONTACT, USER_CONTACT_INFO, USER_NAME, \
-    USER_TG_NAME, USER_CHAT_ID, USER_STATE
-from database.data import DEFAULT_SPEC_DICT, replace_data_item_reference, save_data_item, DEFAULT_METHODS_DICT
+    USER_TG_NAME, USER_CHAT_ID, USER_STATE, USER_ROLE_IDs
+from database.data import DEFAULT_SPEC_DICT, replace_data_item_reference, save_data_item, DEFAULT_METHODS_DICT, \
+    DEFAULT_ROLE_DICT, query_data_items
 from database.survey_text import CITY_REFERAL_TEXT, CITY_RESEARCHER_TEXT, INCORRECT_EMAIL_TEXT, INCORRECT_PHONE_TEXT, \
     ROLE_REFERAL_LAST_NO_RESEARCH_TEXT, ROLE_REFERAL_LAST_RESEARCH_TEXT, LAST_TEXT, VACANCY_TEXT, RESUME_TEXT, \
     COMMUNICATION_MESSAGE, CONTACT_TELEGRAM_TEXT, CONTACT_WHATSAPP_TEXT, CONTACT_PHONE_TEXT, CONTACT_EMAIL_TEXT, \
-    INCORRECT_WHATSAPP_TEXT
-from keyboards.reply.web_app_keybord import request_telegram, request_city
+    INCORRECT_WHATSAPP_TEXT, NOTICE_TEXT
+from keyboards.reply.web_app import request_telegram, request_city
 from loader import bot
 from states.user_states import UserInfoState
 import logging
@@ -71,7 +72,9 @@ def get_specialization(message: Message):
         else:
             bot.send_message(message.chat.id, "Вы не выбрали специализацию! Попробуйте еще раз")
     except json.JSONDecodeError:
-        bot.send_message(message.chat.id, "Ошибка при обработке данных из веб-приложения")
+        logging.error(f"Ошибка при обработке данных из веб-приложения {message.chat.id}")
+    except Exception as e:
+        logging.exception(e)
 
 
 @bot.message_handler(content_types=['web_app_data'], state=[UserInfoState.clinic_research,
@@ -106,7 +109,9 @@ def get_communication(message: Message):
         else:
             bot.send_message(message.chat.id, "Вы не указали способы связи! Попробуйте еще раз")
     except json.JSONDecodeError:
-        bot.send_message(message.chat.id, "Ошибка при обработке данных из веб-приложения")
+        logging.error(f"Ошибка при обработке данных из веб-приложения {message.chat.id}")
+    except Exception as e:
+        logging.exception(e)
 
 
 # @bot.callback_query_handler(func=lambda call: call.data.startswith("comm"), state=[UserInfoState.clinic_research,
@@ -193,7 +198,6 @@ def request_method_contacts(message: Message):
             with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
                 contact_info = data['contact_info']
 
-
             contact_info_str = '\n'.join(contact_info)
 
             request_body = {
@@ -219,101 +223,133 @@ def request_method_contacts(message: Message):
 @bot.message_handler(content_types=['text', 'contact'], state=UserInfoState.communication)
 def get_contact(message: Message) -> None:
     global communication_message
-    with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-        contact_info = data.get('contact_info')
-        comm_methods = data.get('comm_methods')
-        index = data.get('current_method_index', 0)
-
-    if message.content_type == 'contact':
-        contact_info.append(f'Telegram: {message.contact.phone_number}')
-        data['current_method_index'] = index + 1
-        request_method_contacts(message)
-
-    if message.content_type == 'text':
-        # Строка с регулярным выражением, которое соответствует символам, которые нужно удалить
-        phone_pattern = r'[()\s"\'\-+_]'  # Пробелы, скобки, кавычки, дефисы, подчеркивания, плюсы и минусы
-        email_pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
-
-        if comm_methods[index] == 'Почта':
-            if re.match(email_pattern, message.text):
-                contact_info.append(f'Почта: {message.text}')
-                data['current_method_index'] = index + 1
-                request_method_contacts(message)
-            else:
-                text = INCORRECT_EMAIL_TEXT
-                bot.send_message(message.from_user.id, text)
-                if communication_message:
-                    bot.send_message(message.chat.id, communication_message.text)
-
-        elif comm_methods[index] == 'WhatsApp':
-            if re.sub(phone_pattern, '', message.text).isdigit():
-                contact_info.append(f'WhatsApp: {message.text}')
-                data['current_method_index'] = index + 1
-                request_method_contacts(message)
-            else:
-                text = INCORRECT_WHATSAPP_TEXT
-                bot.send_message(message.from_user.id, text)
-                if communication_message:
-                    bot.send_message(message.chat.id, communication_message.text)
-
-        elif comm_methods[index] == 'Телефон':
-            if re.sub(phone_pattern, '', message.text).isdigit():
-                contact_info.append(f'Телефон: {message.text}')
-                data['current_method_index'] = index + 1
-                request_method_contacts(message)
-            else:
-                text = INCORRECT_PHONE_TEXT
-                bot.send_message(message.from_user.id, text)
-                if communication_message:
-                    bot.send_message(message.chat.id, communication_message.text)  # Отправляем предпоследнее сообщение
-        else:
-            bot.send_message(message.from_user.id,
-                             'Кажется вы не нажали кнопку "Поделиться профилем". Попробуйте еще раз')
-            if communication_message:
-                bot.send_message(message.chat.id, communication_message.text)
-
-
-@bot.message_handler(content_types=['text'], state=UserInfoState.last)
-def get_bot_user_name(message: Message) -> None:
-    if message.text.isalpha():
-
+    try:
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-            data['name'] = message.text
-            contact_info = data['contact_info']
+            contact_info = data.get('contact_info')
+            comm_methods = data.get('comm_methods')
+            index = data.get('current_method_index', 0)
 
-        contact_info_str = '\n'.join(contact_info)
+        if message.content_type == 'contact':
+            contact_info.append(f'Telegram: {message.contact.phone_number}')
+            data['current_method_index'] = index + 1
+            request_method_contacts(message)
 
-        request_body = {
-            "dataCollectionId": COLLECTION_USERS,
-            "dataItem": {
-                "id": data.get('id'),
-                "data": {
-                    "_id": data.get('_id'),
-                    USER_CONTACT_INFO: contact_info_str,
-                    USER_TG_NAME: message.from_user.username,
-                    USER_CHAT_ID: message.chat.id,
-                    USER_NAME: data.get('name')
+        if message.content_type == 'text':
+            # Строка с регулярным выражением, которое соответствует символам, которые нужно удалить
+            phone_pattern = r'[()\s"\'\-+_]'  # Пробелы, скобки, кавычки, дефисы, подчеркивания, плюсы и минусы
+            email_pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+
+            if comm_methods[index] == 'Почта':
+                if re.match(email_pattern, message.text):
+                    contact_info.append(f'Почта: {message.text}')
+                    data['current_method_index'] = index + 1
+                    request_method_contacts(message)
+                else:
+                    text = INCORRECT_EMAIL_TEXT
+                    bot.send_message(message.from_user.id, text)
+                    if communication_message:
+                        bot.send_message(message.chat.id, communication_message.text)
+
+            elif comm_methods[index] == 'WhatsApp':
+                if re.sub(phone_pattern, '', message.text).isdigit():
+                    contact_info.append(f'WhatsApp: {message.text}')
+                    data['current_method_index'] = index + 1
+                    request_method_contacts(message)
+                else:
+                    text = INCORRECT_WHATSAPP_TEXT
+                    bot.send_message(message.from_user.id, text)
+                    if communication_message:
+                        bot.send_message(message.chat.id, communication_message.text)
+
+            elif comm_methods[index] == 'Телефон':
+                if re.sub(phone_pattern, '', message.text).isdigit():
+                    contact_info.append(f'Телефон: {message.text}')
+                    data['current_method_index'] = index + 1
+                    request_method_contacts(message)
+                else:
+                    text = INCORRECT_PHONE_TEXT
+                    bot.send_message(message.from_user.id, text)
+                    if communication_message:
+                        bot.send_message(message.chat.id, communication_message.text)  # Отправляем предпоследнее сообщение
+            else:
+                bot.send_message(message.from_user.id,
+                                 'Кажется вы не нажали кнопку "Поделиться профилем". Попробуйте еще раз')
+                if communication_message:
+                    bot.send_message(message.chat.id, communication_message.text)
+                    if communication_message:
+                        bot.send_message(message.chat.id, communication_message.text)
+    except Exception as e:
+        logging.exception(e)
+
+
+@bot.message_handler(content_types=['text'], state=[UserInfoState.last, UserInfoState.end])
+def get_bot_user_name(message: Message) -> None:
+    try:
+        if message.text.isalpha():
+
+            with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+                data['name'] = message.text
+                contact_info = data['contact_info']
+
+            contact_info_str = '\n'.join(contact_info)
+
+            request_body = {
+                "dataCollectionId": COLLECTION_USERS,
+                "dataItem": {
+                    "id": data.get('id'),
+                    "data": {
+                        "_id": data.get('_id'),
+                        USER_CONTACT_INFO: contact_info_str,
+                        USER_TG_NAME: message.from_user.username,
+                        USER_CHAT_ID: message.chat.id,
+                        USER_NAME: data.get('name')
+                    }
                 }
             }
-        }
 
-        save_data_item(request_body)
+            save_data_item(request_body)
 
-        if data.get('role') == 'Врач-реферал':
-            if data.get('suitable_research') == 'yes':
-                bot.send_message(message.from_user.id, ROLE_REFERAL_LAST_RESEARCH_TEXT.format(data["name"]))
-            elif data.get('suitable_research') == 'no':
-                bot.send_message(message.from_user.id,
-                                 ROLE_REFERAL_LAST_NO_RESEARCH_TEXT.format(data["name"], data.get("city"),
-                                                                           data.get("spec")))
+            request_body = {
+                "dataCollectionId": COLLECTION_USERS,
+                "includeReferencedItems": [USER_ROLE_IDs],
+                "query": {
+                    "filter": {
+                        USER_CHAT_ID: {"$exists": True},
+                    },
+                    "fields": [USER_CHAT_ID, USER_ROLE_IDs]
+                }
+            }
+
+            request = query_data_items(request_body)
+
+            data_items = request['dataItems']
+
+            # Iterate over each data item
+            for item in data_items:
+                user_roles = item['data'].get('idUserRoles', [])
+
+                # Check if any of the user roles match the specified role name
+                for role in user_roles:
+                    if role['roleName'] == 'Менеджер бота':
+                        bot.send_message(item['data']['tgChatId'], NOTICE_TEXT.format(data.get('role'), data.get('tg_name')))
+
+            if data.get('role') == 'Врач-реферал':
+                if data.get('suitable_research') == 'yes':
+                    bot.send_message(message.from_user.id, ROLE_REFERAL_LAST_RESEARCH_TEXT.format(data["name"]))
+                elif data.get('suitable_research') == 'no':
+                    bot.send_message(message.from_user.id,
+                                     ROLE_REFERAL_LAST_NO_RESEARCH_TEXT.format(data["name"], data.get("city"),
+                                                                               data.get("spec")))
+            else:
+                bot.send_message(message.from_user.id, LAST_TEXT.format(data["name"]))
+
+            bot.set_state(message.from_user.id, UserInfoState.end, message.chat.id)
+            time.sleep(1)
+            bot.send_message(message.from_user.id, VACANCY_TEXT.format(data["name"]))
+            time.sleep(1)
+            bot.send_message(message.from_user.id, RESUME_TEXT)
+
         else:
-            bot.send_message(message.from_user.id, LAST_TEXT.format(data["name"]))
-
-        bot.set_state(message.from_user.id, UserInfoState.end, message.chat.id)
-        time.sleep(1)
-        bot.send_message(message.from_user.id, VACANCY_TEXT.format(data["name"]))
-        time.sleep(1)
-        bot.send_message(message.from_user.id, RESUME_TEXT)
-
-    else:
-        bot.send_message(message.from_user.id, "Имя должно состоять только из букв. Попробуйте еще раз!")
+            bot.send_message(message.from_user.id, "Имя должно состоять только из букв. Попробуйте еще раз!")
+    except Exception as e:
+        logging.exception(e)

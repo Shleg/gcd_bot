@@ -7,8 +7,8 @@ from database.data import query_full_data_item, get_data_item
 from database.survey_text import (SPEC_TEXT, SELECTING_TEXT, NO_SELECTED_TEXT, IS_SELECTED_TEXT,
                                   REQUEST_COMMUNICATION_TEXT)
 
-from keyboards.reply.web_app_keybord import request_specialization, request_communication
-from keyboards.inline.role import request_doctor_contact
+from keyboards.reply.web_app import request_specialization, request_communication
+from keyboards.inline.inline import request_doctor_contact
 
 from loader import bot
 from states.user_states import UserInfoState
@@ -18,34 +18,37 @@ from telebot import types
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('role:Врач-реферал'), state=None)
 def callback_handler(call) -> None:
-    data = call.data
-    if data.startswith('role:'):
+    try:
+        data = call.data
+        if data.startswith('role:'):
 
-        # Удаление клавиатуры
-        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+            # Удаление клавиатуры
+            bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
-        role = data.split(':')[1]  # Получаем роль после префикса
-        if role in DEFAULT_ROLE_DICT.keys():
-            # bot.answer_callback_query(call.id)
-            bot.send_message(call.message.chat.id, f"Вы выбрали роль: {role}")
+            role = data.split(':')[1]  # Получаем роль после префикса
+            if role in DEFAULT_ROLE_DICT.keys():
+                # bot.answer_callback_query(call.id)
+                bot.send_message(call.message.chat.id, f"Вы выбрали роль: {role}")
 
-            # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние role
-            bot.set_state(call.from_user.id, UserInfoState.role)
-            with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
-                data['role'] = role
+                # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние role
+                bot.set_state(call.from_user.id, UserInfoState.role)
+                with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
+                    data['role'] = role
 
-            request_body = {
-                "dataCollectionId": COLLECTION_USERS,
-                "referringItemFieldName": USER_ROLE_IDs,
-                "referringItemId": data.get('id'),
-                "newReferencedItemIds": [DEFAULT_ROLE_DICT.get(role)]
-            }
-            replace_data_item_reference(request_body)
+                request_body = {
+                    "dataCollectionId": COLLECTION_USERS,
+                    "referringItemFieldName": USER_ROLE_IDs,
+                    "referringItemId": data.get('id'),
+                    "newReferencedItemIds": [DEFAULT_ROLE_DICT.get(role)]
+                }
+                replace_data_item_reference(request_body)
 
-            bot.send_message(
-                call.message.chat.id, SPEC_TEXT,
-                reply_markup=request_specialization()
-            )
+                bot.send_message(
+                    call.message.chat.id, SPEC_TEXT,
+                    reply_markup=request_specialization()
+                )
+    except Exception as e:
+        logging.exception(e)
 
 
 @bot.message_handler(content_types=['web_app_data'], state=UserInfoState.specialization)
@@ -82,64 +85,68 @@ def get_city(message: Message) -> None:
 
         else:
             bot.send_message(message.chat.id, "Вы не выбрали город! Попробуйте еще раз")
-
     except json.JSONDecodeError:
-        bot.send_message(message.chat.id, "Ошибка при обработке данных из веб-приложения")
+        logging.error(f"Ошибка при обработке данных из веб-приложения, чат-ИД {message.chat.id}")
+    except Exception as e:
+        logging.exception(e)
 
 
 def select_researches(message: Message):
-    suitable_researches = []
-
-    with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-        cities = data.get('city')
-        specs = data.get('spec')
-
-    research_list = query_full_data_item(COLLECTION_RESEARCHES_BODY)
-    for research in research_list['dataItems']:
-        research_city = research['data']['citiyId']['cityName']
-        research_spec = research['data']['specializationsId']['specializationName']
-
-        if research_city in cities and research_spec in specs:
-            suitable_researches.append(research)
-
-    with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-        data['suitable_researches'] = suitable_researches
-        data['current_research_index'] = 0
-
-    if suitable_researches:
-
-        bot.set_state(message.from_user.id, UserInfoState.clinic_research, message.chat.id)
+    try:
+        suitable_researches = []
 
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-            data['state'] = 'clinic_research'
-            data['suitable_research'] = 'yes'
+            cities = data.get('city')
+            specs = data.get('spec')
 
-        request_body = {
-            "dataCollectionId": COLLECTION_USERS,
-            "referringItemFieldName": USER_RESEARCH_IDs,
-            "referringItemId": data.get('id'),
-            "newReferencedItemIds": [research['id'] for research in suitable_researches]
-        }
-        replace_data_item_reference(request_body)
+        research_list = query_full_data_item(COLLECTION_RESEARCHES_BODY)
+        for research in research_list['dataItems']:
+            research_city = research['data']['citiyId']['cityName']
+            research_spec = research['data']['specializationsId']['specializationName']
 
-        send_next_research(message)
+            if research_city in cities and research_spec in specs:
+                suitable_researches.append(research)
 
-    else:
-        bot.set_state(message.from_user.id, UserInfoState.no_clinic_research, message.chat.id)
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-            data['state'] = 'no_clinic_research'
-            data['suitable_research'] = 'no'
+            data['suitable_researches'] = suitable_researches
+            data['current_research_index'] = 0
 
-        request_body = {
-            "dataCollectionId": COLLECTION_USERS,
-            "referringItemFieldName": USER_RESEARCH_IDs,
-            "referringItemId": data.get('id'),
-            "newReferencedItemIds": []
-        }
+        if suitable_researches:
 
-        replace_data_item_reference(request_body)
-        bot.send_message(message.chat.id, NO_SELECTED_TEXT.format(data.get('city'), data.get('spec')),
-                         reply_markup=request_communication())
+            bot.set_state(message.from_user.id, UserInfoState.clinic_research, message.chat.id)
+
+            with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+                data['state'] = 'clinic_research'
+                data['suitable_research'] = 'yes'
+
+            request_body = {
+                "dataCollectionId": COLLECTION_USERS,
+                "referringItemFieldName": USER_RESEARCH_IDs,
+                "referringItemId": data.get('id'),
+                "newReferencedItemIds": [research['id'] for research in suitable_researches]
+            }
+            replace_data_item_reference(request_body)
+
+            send_next_research(message)
+
+        else:
+            bot.set_state(message.from_user.id, UserInfoState.no_clinic_research, message.chat.id)
+            with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+                data['state'] = 'no_clinic_research'
+                data['suitable_research'] = 'no'
+
+            request_body = {
+                "dataCollectionId": COLLECTION_USERS,
+                "referringItemFieldName": USER_RESEARCH_IDs,
+                "referringItemId": data.get('id'),
+                "newReferencedItemIds": []
+            }
+
+            replace_data_item_reference(request_body)
+            bot.send_message(message.chat.id, NO_SELECTED_TEXT.format(data.get('city'), data.get('spec')),
+                             reply_markup=request_communication())
+    except Exception as e:
+        logging.exception(e)
 
 
 def send_next_research(message: Message):

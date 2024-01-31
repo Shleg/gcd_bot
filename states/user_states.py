@@ -25,3 +25,17 @@ class UserInfoState(StatesGroup):
     communication = State()
     last = State()
     end = State()
+
+
+"""
+Описание полей данных bot.data
+
+data['id'] = user['dataItem']['id']
+data['_id'] = user['dataItem']['data']['_id']
+data['name'] = user['dataItem']['data'].get('doctorName')
+data['tg_name'] = user['dataItem']['data']['tgName']
+data['chat_id'] = user['dataItem']['data']['tgChatId']
+data['role'] = role
+data['city'] = data_ids
+"""
+

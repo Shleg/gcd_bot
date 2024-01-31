@@ -1,1 +1,1 @@
-from . import web_app_keybord
+from . import web_app

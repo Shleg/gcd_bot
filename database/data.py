@@ -1,7 +1,7 @@
 import logging
-import time
 
 import requests
+
 from database.config_data import *
 
 HEADERS = {
@@ -205,7 +205,7 @@ DEFAULT_ROLE_LIST = [{role['data']['roleName']: role['id']} for role in query_da
 DEFAULT_ROLE_DICT = dict((k, v) for d in DEFAULT_ROLE_LIST for k, v in d.items())
 
 
-DEFAULT_SPEC = [spec['data']['specializationName'] for spec in query_data_items(COLLECTION_SPECS_BODY)['dataItems']]
+#DEFAULT_SPEC = [spec['data']['specializationName'] for spec in query_data_items(COLLECTION_SPECS_BODY)['dataItems']]
 DEFAULT_SPEC_LIST = [{spec['data']['specializationName']: spec['id']} for spec in query_data_items(COLLECTION_SPECS_BODY)['dataItems']]
 DEFAULT_SPEC_DICT = dict((k, v) for d in DEFAULT_SPEC_LIST for k, v in d.items())
 

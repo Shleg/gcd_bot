@@ -2,36 +2,41 @@ import json
 import time
 
 
-from keyboards.reply.web_app_keybord import request_area, request_drugs, request_communication
-from keyboards.inline.role import request_condition, request_phase
+from keyboards.reply.web_app import request_area, request_drugs, request_communication
+from keyboards.inline.inline import request_condition, request_phase
 from loader import bot
 from states.user_states import UserInfoState
 from telebot.types import Message
 from telebot import types
 
+import logging
+
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('role:Врач-исследователь'), state=None)
 def callback_handler(call) -> None:
-    data = call.data
+    try:
+        data = call.data
 
-    # Удаление клавиатуры
-    bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+        # Удаление клавиатуры
+        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
-    role = data.split(':')[1]  # Получаем роль после префикса
+        role = data.split(':')[1]  # Получаем роль после префикса
 
-    bot.answer_callback_query(call.id)
-    bot.send_message(call.message.chat.id, f"Вы выбрали роль: {role}")
+        bot.answer_callback_query(call.id)
+        bot.send_message(call.message.chat.id, f"Вы выбрали роль: {role}")
 
-    # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние role
-    bot.set_state(call.from_user.id, UserInfoState.role)
-    with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
-        data['role'] = role
+        # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние role
+        bot.set_state(call.from_user.id, UserInfoState.role)
+        with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
+            data['role'] = role
 
-    bot.send_message(
-        call.message.chat.id,
-        "Выберите, пожалуйста, вашу терапевтическую область исследования...",
-        reply_markup=request_area()
-    )
+        bot.send_message(
+            call.message.chat.id,
+            "Выберите, пожалуйста, вашу терапевтическую область исследования...",
+            reply_markup=request_area()
+        )
+    except Exception as e:
+        logging.exception(e)
 
 
 @bot.message_handler(content_types=['web_app_data'], state=UserInfoState.area)
@@ -57,7 +62,9 @@ def get_city(message: Message) -> None:
         else:
             bot.send_message(message.chat.id, "Вы не выбрали город! Попробуйте еще раз")
     except json.JSONDecodeError:
-        bot.send_message(message.chat.id, "Ошибка при обработке данных из веб-приложения")
+        logging.error(f"Ошибка при обработке данных из веб-приложения {message.chat.id}")
+    except Exception as e:
+        logging.exception(e)
 
 
 @bot.message_handler(content_types=['text'], state=UserInfoState.city_area)
@@ -168,4 +175,7 @@ def get_drugs(message: Message) -> None:
                          reply_markup=request_communication())
 
     except json.JSONDecodeError:
-        bot.send_message(message.chat.id, "Ошибка при обработке данных из веб-приложения")
+        logging.error(f"Ошибка при обработке данных из веб-приложения {message.chat.id}")
+    except Exception as e:
+        logging.exception(e)
+
