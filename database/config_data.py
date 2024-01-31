@@ -98,3 +98,7 @@ COLLECTION_DRUGS_BODY = {
 }
 DRUG_NAME = 'drugGroupsName'
 
+COLLECTION_METHODS = 'botContactPreferencesCatalog'
+COLLECTION_METHODS_BODY = {
+    "dataCollectionId": COLLECTION_METHODS
+}

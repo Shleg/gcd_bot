@@ -2,8 +2,8 @@ import json
 import time
 
 
-from keyboards.reply.web_app_keybord import request_area, request_drugs
-from keyboards.inline.role import request_condition, request_phase, request_communication
+from keyboards.reply.web_app_keybord import request_area, request_drugs, request_communication
+from keyboards.inline.role import request_condition, request_phase
 from loader import bot
 from states.user_states import UserInfoState
 from telebot.types import Message

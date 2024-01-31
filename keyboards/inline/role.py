@@ -5,7 +5,7 @@ import emoji
 from telebot import types
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
-from database.data import DEFAULT_ROLE, DEFAULT_SPEC, DEFAULT_PHASES
+from database.data import DEFAULT_PHASES_DICT
 from database.config_data import BOT_FORM
 
 
@@ -49,22 +49,22 @@ def request_condition() -> InlineKeyboardMarkup:
 
 def request_phase() -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup()
-    for phase in DEFAULT_PHASES[::-1]:
+    for phase in DEFAULT_PHASES_DICT.keys()[::-1]:
         keyboard.add(
             InlineKeyboardButton(phase, callback_data=f'phase:{phase}')
         )
     return keyboard
 
 
-def request_communication() -> InlineKeyboardMarkup:
-    keyboard = InlineKeyboardMarkup()
-    keyboard.add(
-        InlineKeyboardButton('Telegram', callback_data='comm:Telegram'),
-        InlineKeyboardButton('WhatsApp', callback_data='comm:WhatsApp')
-    )
-    keyboard.add(
-        InlineKeyboardButton('Телефон', callback_data='comm:Phone'),
-        InlineKeyboardButton('Почта', callback_data='comm:Email')
-    )
-    return keyboard
+# def request_communication() -> InlineKeyboardMarkup:
+#     keyboard = InlineKeyboardMarkup()
+#     keyboard.add(
+#         InlineKeyboardButton('Telegram', callback_data='comm:Telegram'),
+#         InlineKeyboardButton('WhatsApp', callback_data='comm:WhatsApp')
+#     )
+#     keyboard.add(
+#         InlineKeyboardButton('Телефон', callback_data='comm:Phone'),
+#         InlineKeyboardButton('Почта', callback_data='comm:Email')
+#     )
+#     return keyboard
 

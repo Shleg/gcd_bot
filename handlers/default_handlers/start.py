@@ -1,6 +1,6 @@
 from telebot.types import Message
 
-from database.config_data import COLLECTION_USERS, USER_CHAT_ID, USER_TG_NAME
+from database.config_data import COLLECTION_USERS, USER_CHAT_ID, USER_TG_NAME, USER_STATE
 from database.data import query_data_items, get_data_item, save_data_item
 from database.survey_text import WELCOME_TEXT, RETURN_TEXT, ROLE_TEXT
 from keyboards.inline.role import request_role
@@ -42,7 +42,7 @@ def bot_start(message: Message):
                 data['name'] = user['dataItem']['data'].get('doctorName')
                 data['tg_name'] = user['dataItem']['data']['tgName']
                 data['chat_id'] = user['dataItem']['data']['tgChatId']
-                # data['state'] = user['dataItem']['data'].get('newField')
+                #data['state'] = user['dataItem']['data'].get('newField')
 
             bot.send_message(
                 message.chat.id, RETURN_TEXT.format(data.get("tg_name")))
@@ -54,12 +54,15 @@ def bot_start(message: Message):
             # process_user_state(message.from_user.id, message, user_state)
 
     else:
+
+        bot.set_state(message.from_user.id, UserInfoState.initial)
         request_body = {
             "dataCollectionId": COLLECTION_USERS,
             "dataItem": {
                 "data": {
                     USER_TG_NAME: message.from_user.username,
-                    USER_CHAT_ID: message.chat.id
+                    USER_CHAT_ID: message.chat.id,
+                    #USER_STATE: bot.get_state(message.from_user.id)
                 }
             }
         }
@@ -70,10 +73,9 @@ def bot_start(message: Message):
             data['_id'] = new_user['dataItem']['data']['_id']
             data['chat_id'] = new_user['dataItem']['data']['tgChatId']
             data['tg_name'] = new_user['dataItem']['data']['tgName']
+            #data['state'] = bot.get_state(message.from_user.id)
 
-
-        bot.send_message(message.chat.id, ROLE_TEXT,reply_markup=request_role())
-
+        bot.send_message(message.chat.id, ROLE_TEXT, reply_markup=request_role())
 
 # Функция для преобразования строки в состояние
 # def string_to_state(state_str):

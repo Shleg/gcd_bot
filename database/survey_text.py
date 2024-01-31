@@ -35,6 +35,8 @@ CONTACT_EMAIL_TEXT = 'Пожалуйста, напишите адрес элек
 
 INCORRECT_PHONE_TEXT = 'Вы указали некорректный номер телефона!\nПопробуйте еще раз!'
 
+INCORRECT_WHATSAPP_TEXT = 'Вы указали некорректный номер WhatsApp!\nПопробуйте еще раз!'
+
 INCORRECT_EMAIL_TEXT = 'Вы указали некорректный электронный адрес!\nПопробуйте еще раз!'
 
 ROLE_REFERAL_LAST_RESEARCH_TEXT = ('Благодарим за ваше участие, {}!\n'
