@@ -2,10 +2,10 @@ import json
 import logging
 
 from database.config_data import COLLECTION_USERS, USER_ROLE_IDs, USER_CITY_ID, USER_RESEARCH_IDs
-from database.data import COLLECTION_RESEARCHES_BODY, DEFAULT_ROLE_DICT, DEFAULT_CITY_DICT, replace_data_item_reference
+from database.data import COLLECTION_RESEARCHES_BODY, DEFAULT_ROLE_DICT, DEFAULT_CITY_DICT, replace_data_item_reference, \
+    DEFAULT_TEMPLATE_DICT
 from database.data import query_full_data_item, get_data_item
-from database.survey_text import (SPEC_TEXT, SELECTING_TEXT, NO_SELECTED_TEXT, IS_SELECTED_TEXT,
-                                  REQUEST_COMMUNICATION_TEXT)
+
 
 from keyboards.reply.web_app import request_specialization, request_communication
 from keyboards.inline.inline import request_doctor_contact
@@ -44,7 +44,7 @@ def callback_handler(call) -> None:
                 replace_data_item_reference(request_body)
 
                 bot.send_message(
-                    call.message.chat.id, SPEC_TEXT,
+                    call.message.chat.id, DEFAULT_TEMPLATE_DICT.get('SPEC_TEXT'),
                     reply_markup=request_specialization()
                 )
     except Exception as e:
@@ -75,7 +75,7 @@ def get_city(message: Message) -> None:
             }
             replace_data_item_reference(request_body)
 
-            bot.send_message(message.chat.id, SELECTING_TEXT)
+            bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('SELECTING_TEXT'))
 
             # Устанавливаем новое состояние пользователя
             bot.set_state(message.from_user.id, UserInfoState.city, message.chat.id)
@@ -143,7 +143,7 @@ def select_researches(message: Message):
             }
 
             replace_data_item_reference(request_body)
-            bot.send_message(message.chat.id, NO_SELECTED_TEXT.format(data.get('city'), data.get('spec')),
+            bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('NO_SELECTED_TEXT').format(data.get('city'), data.get('spec')),
                              reply_markup=request_communication())
     except Exception as e:
         logging.exception(e)
@@ -159,12 +159,12 @@ def send_next_research(message: Message):
             suitable_research = suitable_researches[index]
             suitable_research_name = suitable_research['data']['clinicalStudiesName']
             doctor_id = f"{suitable_research['data']['researcherDoctorId']['_id']}"
-            bot.send_message(message.chat.id, IS_SELECTED_TEXT.format(suitable_research_name),
+            bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('IS_SELECTED_TEXT').format(suitable_research_name),
                              reply_markup=request_doctor_contact(doctor_id))
             data['current_research_index'] = index + 1
 
         else:
-            bot.send_message(message.chat.id, REQUEST_COMMUNICATION_TEXT.format(data.get('city'), data.get('spec')),
+            bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('REQUEST_COMMUNICATION_TEXT').format(data.get('city'), data.get('spec')),
                              reply_markup=request_communication())
     except Exception as e:
         logging.exception(e)

@@ -8,7 +8,7 @@ from telebot.types import Message
 from database.config_data import COLLECTION_USERS, USER_SPEC_IDs, USER_PREF_CONTACT, USER_CONTACT_INFO, USER_NAME, \
     USER_TG_NAME, USER_CHAT_ID, USER_STATE, USER_ROLE_IDs
 from database.data import DEFAULT_SPEC_DICT, replace_data_item_reference, save_data_item, DEFAULT_METHODS_DICT, \
-    DEFAULT_ROLE_DICT, query_data_items
+    DEFAULT_ROLE_DICT, query_data_items, DEFAULT_TEMPLATE_DICT
 from database.survey_text import CITY_REFERAL_TEXT, CITY_RESEARCHER_TEXT, INCORRECT_EMAIL_TEXT, INCORRECT_PHONE_TEXT, \
     ROLE_REFERAL_LAST_NO_RESEARCH_TEXT, ROLE_REFERAL_LAST_RESEARCH_TEXT, LAST_TEXT, VACANCY_TEXT, RESUME_TEXT, \
     COMMUNICATION_MESSAGE, CONTACT_TELEGRAM_TEXT, CONTACT_WHATSAPP_TEXT, CONTACT_PHONE_TEXT, CONTACT_EMAIL_TEXT, \
@@ -46,7 +46,7 @@ def get_specialization(message: Message):
                 }
                 replace_data_item_reference(request_body)
 
-                bot.send_message(message.chat.id, CITY_REFERAL_TEXT, reply_markup=request_city())
+                bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('CITY_REFERAL_TEXT'), reply_markup=request_city())
 
             elif button_text == 'Выбрать область исследования':
                 # Обработка полученных данных
@@ -68,7 +68,7 @@ def get_specialization(message: Message):
                 replace_data_item_reference(request_body)
 
                 bot.send_message(
-                    message.chat.id, CITY_RESEARCHER_TEXT, reply_markup=request_city())
+                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('CITY_RESEARCHER_TEXT'), reply_markup=request_city())
         else:
             bot.send_message(message.chat.id, "Вы не выбрали специализацию! Попробуйте еще раз")
     except json.JSONDecodeError:
@@ -114,54 +114,6 @@ def get_communication(message: Message):
         logging.exception(e)
 
 
-# @bot.callback_query_handler(func=lambda call: call.data.startswith("comm"), state=[UserInfoState.clinic_research,
-#                                                                                    UserInfoState.no_clinic_research,
-#                                                                                    UserInfoState.drugs])
-# def get_communication(call):
-#     global communication_message
-#     data = call.data
-#     if data.startswith('comm:'):
-#
-#         # Удаление клавиатуры
-#         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
-#
-#         communication = data.split(':')[1]  # Получаем способ коммуникации
-#         if communication:
-#             bot.answer_callback_query(call.id)
-#             bot.send_message(call.message.chat.id, f"Вы выбрали предпочтительный способ коммуникации: {communication}")
-#
-#             # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние communication
-#             bot.set_state(call.from_user.id, UserInfoState.communication)
-#             with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
-#                 data['communication'] = communication
-#
-#             # request_body = {
-#             #     "dataCollectionId": COLLECTION_USERS,
-#             #     "referringItemFieldName": USER_PREF_CONTACT,
-#             #     "referringItemId": data.get('id'),
-#             #     "newReferencedItemIds": []
-#             # }
-#             # replace_data_item_reference(request_body)
-#
-#             # user_info['id] = insert_wix_data_item_tg_name('botUsers', call.from_user.username)
-#             # user_info['tgName] = call.from_user.username
-#
-#             if communication == 'Telegram':
-#                 communication_message = bot.send_message(
-#                     call.message.chat.id, CONTACT_TELEGRAM_TEXT, reply_markup=request_telegram())
-#
-# elif communication == 'WhatsApp':
-#     communication_message = bot.send_message(
-#         call.message.chat.id, CONTACT_WHATSAPP_TEXT)
-#
-# elif communication == 'Phone':
-#     communication_message = bot.send_message(
-#         call.message.chat.id, CONTACT_PHONE_TEXT)
-#
-# elif communication == 'Email':
-#     communication_message = bot.send_message(
-#         call.message.chat.id, CONTACT_EMAIL_TEXT)
-
 def request_method_contacts(message: Message):
     global communication_message
     try:
@@ -179,19 +131,19 @@ def request_method_contacts(message: Message):
 
             if method == 'Telegram':
                 communication_message = bot.send_message(
-                    message.chat.id, CONTACT_TELEGRAM_TEXT, reply_markup=request_telegram())
+                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('CONTACT_TELEGRAM_TEXT'), reply_markup=request_telegram())
 
             elif method == 'WhatsApp':
                 communication_message = bot.send_message(
-                    message.chat.id, CONTACT_WHATSAPP_TEXT)
+                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('CONTACT_WHATSAPP_TEXT'))
 
             elif method == 'Телефон':
                 communication_message = bot.send_message(
-                    message.chat.id, CONTACT_PHONE_TEXT)
+                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('CONTACT_PHONE_TEXT'))
 
             elif method == 'Почта':
                 communication_message = bot.send_message(
-                    message.chat.id, CONTACT_EMAIL_TEXT)
+                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('CONTACT_EMAIL_TEXT'))
         else:
 
             bot.set_state(message.from_user.id, UserInfoState.last, message.chat.id)
@@ -215,7 +167,7 @@ def request_method_contacts(message: Message):
 
             save_data_item(request_body)
 
-            bot.send_message(message.from_user.id, COMMUNICATION_MESSAGE)
+            bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('COMMUNICATION_MESSAGE'))
     except Exception as e:
         logging.exception(e)
 
@@ -245,7 +197,7 @@ def get_contact(message: Message) -> None:
                     data['current_method_index'] = index + 1
                     request_method_contacts(message)
                 else:
-                    text = INCORRECT_EMAIL_TEXT
+                    text = DEFAULT_TEMPLATE_DICT.get('INCORRECT_EMAIL_TEXT')
                     bot.send_message(message.from_user.id, text)
                     if communication_message:
                         bot.send_message(message.chat.id, communication_message.text)
@@ -256,7 +208,7 @@ def get_contact(message: Message) -> None:
                     data['current_method_index'] = index + 1
                     request_method_contacts(message)
                 else:
-                    text = INCORRECT_WHATSAPP_TEXT
+                    text = DEFAULT_TEMPLATE_DICT.get('INCORRECT_WHATSAPP_TEXT')
                     bot.send_message(message.from_user.id, text)
                     if communication_message:
                         bot.send_message(message.chat.id, communication_message.text)
@@ -267,7 +219,7 @@ def get_contact(message: Message) -> None:
                     data['current_method_index'] = index + 1
                     request_method_contacts(message)
                 else:
-                    text = INCORRECT_PHONE_TEXT
+                    text = DEFAULT_TEMPLATE_DICT.get('INCORRECT_PHONE_TEXT')
                     bot.send_message(message.from_user.id, text)
                     if communication_message:
                         bot.send_message(message.chat.id, communication_message.text)  # Отправляем предпоследнее сообщение
@@ -331,23 +283,23 @@ def get_bot_user_name(message: Message) -> None:
                 # Check if any of the user roles match the specified role name
                 for role in user_roles:
                     if role['roleName'] == 'Менеджер бота':
-                        bot.send_message(item['data']['tgChatId'], NOTICE_TEXT.format(data.get('role'), data.get('tg_name')))
+                        bot.send_message(item['data']['tgChatId'], DEFAULT_TEMPLATE_DICT.get('NOTICE_TEXT').format(data.get('role'), data.get('tg_name')))
 
             if data.get('role') == 'Врач-реферал':
                 if data.get('suitable_research') == 'yes':
-                    bot.send_message(message.from_user.id, ROLE_REFERAL_LAST_RESEARCH_TEXT.format(data["name"]))
+                    bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('ROLE_REFERAL_LAST_RESEARCH_TEXT').format(data["name"]))
                 elif data.get('suitable_research') == 'no':
                     bot.send_message(message.from_user.id,
-                                     ROLE_REFERAL_LAST_NO_RESEARCH_TEXT.format(data["name"], data.get("city"),
+                                     DEFAULT_TEMPLATE_DICT.get('ROLE_REFERAL_LAST_NO_RESEARCH_TEXT').format(data["name"], data.get("city"),
                                                                                data.get("spec")))
             else:
-                bot.send_message(message.from_user.id, LAST_TEXT.format(data["name"]))
+                bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('LAST_TEXT').format(data["name"]))
 
             bot.set_state(message.from_user.id, UserInfoState.end, message.chat.id)
             time.sleep(1)
-            bot.send_message(message.from_user.id, VACANCY_TEXT.format(data["name"]))
+            bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('VACANCY_TEXT').format(data["name"]))
             time.sleep(1)
-            bot.send_message(message.from_user.id, RESUME_TEXT)
+            bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('RESUME_TEXT'))
 
         else:
             bot.send_message(message.from_user.id, "Имя должно состоять только из букв. Попробуйте еще раз!")

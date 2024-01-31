@@ -102,3 +102,8 @@ COLLECTION_METHODS = 'botContactPreferencesCatalog'
 COLLECTION_METHODS_BODY = {
     "dataCollectionId": COLLECTION_METHODS
 }
+
+COLLECTION_TEMPLATE = 'botTemplateMessageSettings'
+COLLECTION_TEMPLATE_BODY = {
+    "dataCollectionId": COLLECTION_TEMPLATE
+}

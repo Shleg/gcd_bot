@@ -1,8 +1,7 @@
 from telebot.types import Message
 
 from database.config_data import COLLECTION_USERS, USER_CHAT_ID, USER_TG_NAME, USER_STATE, USER_ROLE_IDs
-from database.data import query_data_items, get_data_item, save_data_item, query_referenced_data_items
-from database.survey_text import WELCOME_TEXT, RETURN_TEXT, ROLE_TEXT, ADMIN_TEXT
+from database.data import query_data_items, get_data_item, save_data_item, query_referenced_data_items, DEFAULT_TEMPLATE_DICT
 from keyboards.inline.inline import request_role
 from loader import bot
 from states.user_states import UserInfoState
@@ -10,7 +9,7 @@ from states.user_states import UserInfoState
 
 @bot.message_handler(commands=["start"], state=None)
 def bot_start(message: Message):
-    bot.reply_to(message, WELCOME_TEXT.format(message.from_user.full_name))
+    bot.reply_to(message, DEFAULT_TEMPLATE_DICT.get('WELCOME_TEXT').format(message.from_user.full_name))
 
     request_body = {
         "dataCollectionId": COLLECTION_USERS,
@@ -55,11 +54,11 @@ def bot_start(message: Message):
                              query_referenced_data_items(request_body)['results']]
 
             if 'Менеджер бота' in data.get('roles'):
-                bot.send_message(message.chat.id, ADMIN_TEXT.format(message.from_user.full_name))
+                bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ADMIN_TEXT').format(message.from_user.full_name))
             else:
                 bot.send_message(
-                    message.chat.id, RETURN_TEXT.format(data.get("tg_name")))
-                bot.send_message(message.chat.id, ROLE_TEXT, reply_markup=request_role())
+                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('RETURN_TEXT').format(data.get("tg_name")))
+                bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'), reply_markup=request_role())
 
             # user_state = string_to_state(data['state'])
             # bot.set_state(message.from_user.id, user_state, message.chat.id)
@@ -87,7 +86,7 @@ def bot_start(message: Message):
             data['tg_name'] = new_user['dataItem']['data']['tgName']
             # data['state'] = bot.get_state(message.from_user.id)
 
-        bot.send_message(message.chat.id, ROLE_TEXT, reply_markup=request_role())
+        bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'), reply_markup=request_role())
 
 # Функция для преобразования строки в состояние
 # def string_to_state(state_str):
