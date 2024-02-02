@@ -7,7 +7,7 @@ from loader import bot
 from states.user_states import UserInfoState
 
 
-@bot.message_handler(commands=["start"], state=None)
+@bot.message_handler(commands=["start"], state=[None, UserInfoState.end])
 def bot_start(message: Message):
     bot.reply_to(message, DEFAULT_TEMPLATE_DICT.get('WELCOME_TEXT').format(message.from_user.full_name))
 

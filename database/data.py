@@ -238,7 +238,17 @@ DEFAULT_METHODS_LIST = [{method['data']['contactPreferencesName']: method['id']}
 DEFAULT_METHODS_DICT = dict((k, v) for d in DEFAULT_METHODS_LIST for k, v in d.items())
 
 test = query_data_items(COLLECTION_TEMPLATE_BODY)['dataItems']
-DEFAULT_TEMPLATE_LIST = [{template['data']['templateMessageName']: template['data']['templateMessageDescription']} for
-                         template in query_data_items(COLLECTION_TEMPLATE_BODY)['dataItems']]
-DEFAULT_TEMPLATE_DICT = dict((k, v) for d in DEFAULT_METHODS_LIST for k, v in d.items())
 
+
+# DEFAULT_TEMPLATE_LIST = [{template['data']['templateMessageName']: template['data']['templateMessageDescription']} for
+#                          template in query_data_items(COLLECTION_TEMPLATE_BODY)['dataItems']]
+
+
+# DEFAULT_TEMPLATE_DICT = dict((k, v) for d in DEFAULT_METHODS_LIST for k, v in d.items())
+
+def generate_template_dict():
+    for template in query_data_items(COLLECTION_TEMPLATE_BODY)['dataItems']:
+        yield {template['data']['templateMessageName']: template['data']['templateMessageDescription']}
+
+
+DEFAULT_TEMPLATE_DICT = dict((k, v) for d in generate_template_dict() for k, v in d.items())

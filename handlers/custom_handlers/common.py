@@ -9,10 +9,6 @@ from database.config_data import COLLECTION_USERS, USER_SPEC_IDs, USER_PREF_CONT
     USER_TG_NAME, USER_CHAT_ID, USER_STATE, USER_ROLE_IDs
 from database.data import DEFAULT_SPEC_DICT, replace_data_item_reference, save_data_item, DEFAULT_METHODS_DICT, \
     DEFAULT_ROLE_DICT, query_data_items, DEFAULT_TEMPLATE_DICT
-from database.survey_text import CITY_REFERAL_TEXT, CITY_RESEARCHER_TEXT, INCORRECT_EMAIL_TEXT, INCORRECT_PHONE_TEXT, \
-    ROLE_REFERAL_LAST_NO_RESEARCH_TEXT, ROLE_REFERAL_LAST_RESEARCH_TEXT, LAST_TEXT, VACANCY_TEXT, RESUME_TEXT, \
-    COMMUNICATION_MESSAGE, CONTACT_TELEGRAM_TEXT, CONTACT_WHATSAPP_TEXT, CONTACT_PHONE_TEXT, CONTACT_EMAIL_TEXT, \
-    INCORRECT_WHATSAPP_TEXT, NOTICE_TEXT
 from keyboards.reply.web_app import request_telegram, request_city
 from loader import bot
 from states.user_states import UserInfoState
@@ -228,8 +224,7 @@ def get_contact(message: Message) -> None:
                                  'Кажется вы не нажали кнопку "Поделиться профилем". Попробуйте еще раз')
                 if communication_message:
                     bot.send_message(message.chat.id, communication_message.text)
-                    if communication_message:
-                        bot.send_message(message.chat.id, communication_message.text)
+
     except Exception as e:
         logging.exception(e)
 
