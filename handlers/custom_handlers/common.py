@@ -234,7 +234,7 @@ def get_contact(message: Message) -> None:
         logging.exception(e)
 
 
-@bot.message_handler(content_types=['text'], state=[UserInfoState.last, UserInfoState.end])
+@bot.message_handler(content_types=['text'], state=UserInfoState.last)
 def get_bot_user_name(message: Message) -> None:
     try:
         if message.text.isalpha():
