@@ -16,7 +16,7 @@ from telebot.types import Message
 from telebot import types
 
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith('role:Врач-реферал'), state=None)
+@bot.callback_query_handler(func=lambda call: call.data.startswith('role:Врач-реферал'), state=UserInfoState.initial)
 def callback_handler(call) -> None:
     try:
         data = call.data
@@ -28,7 +28,7 @@ def callback_handler(call) -> None:
             role = data.split(':')[1]  # Получаем роль после префикса
             if role in DEFAULT_ROLE_DICT.keys():
                 # bot.answer_callback_query(call.id)
-                bot.send_message(call.message.chat.id, f"Вы выбрали роль: {role}")
+                # bot.send_message(call.message.chat.id, f"Вы выбрали роль: {role}")
 
                 # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние role
                 bot.set_state(call.from_user.id, UserInfoState.role)
@@ -157,6 +157,7 @@ def send_next_research(message: Message):
 
         if index < len(suitable_researches):
             suitable_research = suitable_researches[index]
+            data['suitable_research_name'] = suitable_research['data']['clinicalStudiesName']
             suitable_research_name = suitable_research['data']['clinicalStudiesName']
             doctor_id = f"{suitable_research['data']['researcherDoctorId']['_id']}"
             bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('IS_SELECTED_TEXT').format(suitable_research_name),
@@ -178,11 +179,14 @@ def get_doctor_contact(call):
     bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
     doctor = get_data_item(COLLECTION_USERS, call.data.split(':')[1])
 
+    with bot.retrieve_data(call.message.chat.id) as data:
+        suitable_research_name = data.get('suitable_research_name')
+
     if doctor:
         doctor_name = f"{doctor['dataItem']['data']['doctorName']}"
         doctor_contact = f"{doctor['dataItem']['data']['contactInfo']}"
 
-        contact_info_message = f"Имя врача: {doctor_name}\nКонтактные данные: {doctor_contact}"
+        contact_info_message = f"Исследование: {suitable_research_name}\n,Имя врача: {doctor_name}\nКонтактные данные: {doctor_contact}"
         bot.send_message(call.message.chat.id, contact_info_message)
 
     else:

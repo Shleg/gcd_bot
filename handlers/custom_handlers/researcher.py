@@ -12,7 +12,7 @@ from telebot import types
 import logging
 
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith('role:Врач-исследователь'), state=None)
+@bot.callback_query_handler(func=lambda call: call.data.startswith('role:Врач-исследователь'), state=UserInfoState.initial)
 def callback_handler(call) -> None:
     try:
         data = call.data

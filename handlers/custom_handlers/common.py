@@ -8,7 +8,7 @@ from telebot.types import Message
 from database.config_data import COLLECTION_USERS, USER_SPEC_IDs, USER_PREF_CONTACT, USER_CONTACT_INFO, USER_NAME, \
     USER_TG_NAME, USER_CHAT_ID, USER_STATE, USER_ROLE_IDs
 from database.data import DEFAULT_SPEC_DICT, replace_data_item_reference, save_data_item, DEFAULT_METHODS_DICT, \
-    DEFAULT_ROLE_DICT, query_data_items, DEFAULT_TEMPLATE_DICT
+    DEFAULT_ROLE_DICT, query_data_items, DEFAULT_TEMPLATE_DICT, get_bots_manager_chat_ids
 from keyboards.reply.web_app import request_telegram, request_city
 from loader import bot
 from states.user_states import UserInfoState
@@ -256,29 +256,33 @@ def get_bot_user_name(message: Message) -> None:
 
             save_data_item(request_body)
 
-            request_body = {
-                "dataCollectionId": COLLECTION_USERS,
-                "includeReferencedItems": [USER_ROLE_IDs],
-                "query": {
-                    "filter": {
-                        USER_CHAT_ID: {"$exists": True},
-                    },
-                    "fields": [USER_CHAT_ID, USER_ROLE_IDs]
-                }
-            }
+            # request_body = {
+            #     "dataCollectionId": COLLECTION_USERS,
+            #     "includeReferencedItems": [USER_ROLE_IDs],
+            #     "query": {
+            #         "filter": {
+            #             USER_CHAT_ID: {"$exists": True},
+            #         },
+            #         "fields": [USER_CHAT_ID, USER_ROLE_IDs]
+            #     }
+            # }
+            #
+            # request = query_data_items(request_body)
+            #
+            # data_items = request['dataItems']
+            #
+            # # Iterate over each data item
+            # for item in data_items:
+            #     user_roles = item['data'].get('idUserRoles', [])
+            #
+            #     # Check if any of the user roles match the specified role name
+            #     for role in user_roles:
+            #         if role['roleName'] == 'Менеджер бота':
+            #             bot.send_message(item['data']['tgChatId'], DEFAULT_TEMPLATE_DICT.get('NOTICE_TEXT').format(data.get('role'), data.get('tg_name')))
 
-            request = query_data_items(request_body)
-
-            data_items = request['dataItems']
-
-            # Iterate over each data item
-            for item in data_items:
-                user_roles = item['data'].get('idUserRoles', [])
-
-                # Check if any of the user roles match the specified role name
-                for role in user_roles:
-                    if role['roleName'] == 'Менеджер бота':
-                        bot.send_message(item['data']['tgChatId'], DEFAULT_TEMPLATE_DICT.get('NOTICE_TEXT').format(data.get('role'), data.get('tg_name')))
+            for chat_id in get_bots_manager_chat_ids():
+                bot.send_message(chat_id,
+                                 DEFAULT_TEMPLATE_DICT.get('NOTICE_TEXT').format(data.get('role'), data.get('tg_name')))
 
             if data.get('role') == 'Врач-реферал':
                 if data.get('suitable_research') == 'yes':
@@ -289,14 +293,13 @@ def get_bot_user_name(message: Message) -> None:
                                                                                data.get("spec")))
             else:
                 bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('LAST_TEXT').format(data["name"]))
-
-            bot.set_state(message.from_user.id, UserInfoState.end, message.chat.id)
-            time.sleep(1)
-            bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('VACANCY_TEXT').format(data["name"]))
-            time.sleep(1)
-            bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('RESUME_TEXT'))
-
         else:
             bot.send_message(message.from_user.id, "Имя должно состоять только из букв. Попробуйте еще раз!")
     except Exception as e:
         logging.exception(e)
+    finally:
+        bot.set_state(message.from_user.id, UserInfoState.end, message.chat.id)
+        time.sleep(1)
+        bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('VACANCY_TEXT').format(data["name"]))
+        time.sleep(1)
+        bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('RESUME_TEXT'))

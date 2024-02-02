@@ -1,3 +1,4 @@
+from telebot import types
 from telebot.types import Message
 
 from database.config_data import COLLECTION_USERS, USER_CHAT_ID, USER_TG_NAME, USER_STATE, USER_ROLE_IDs
@@ -7,9 +8,9 @@ from loader import bot
 from states.user_states import UserInfoState
 
 
-@bot.message_handler(commands=["start"], state=[None, UserInfoState.end])
+@bot.message_handler(commands=["start"])
 def bot_start(message: Message):
-    bot.reply_to(message, DEFAULT_TEMPLATE_DICT.get('WELCOME_TEXT').format(message.from_user.full_name))
+    bot.reply_to(message, DEFAULT_TEMPLATE_DICT.get('WELCOME_TEXT').format(message.from_user.full_name), reply_markup=types.ReplyKeyboardRemove())
 
     request_body = {
         "dataCollectionId": COLLECTION_USERS,

@@ -1,4 +1,11 @@
+from typing import Any
+
 from telebot.types import Message
+
+from database.data import DEFAULT_TEMPLATE_DICT
+from handlers.custom_handlers.referral import send_next_research
+from handlers.default_handlers.start import bot_start
+from keyboards.inline.inline import request_role
 from states.user_states import UserInfoState
 from loader import bot
 
@@ -10,8 +17,9 @@ def bot_echo(message: Message):
 
     if state == UserInfoState.initial.name:
         bot.reply_to(
-            message, "Вы не выбрали роль!\nВоcпользуйтесь кнопками выше для выбора роли"
+            message, "Вы не выбрали роль!", reply_markup=None
         )
+        bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'), reply_markup=request_role())
     elif state == UserInfoState.role.name:
         bot.reply_to(
             message, "Вы не выбрали специализацию!\nВоcпользуйтесь кнопкой ниже для выбора специализации"
@@ -24,3 +32,11 @@ def bot_echo(message: Message):
         bot.reply_to(
             message, "Вы не выбрали город!\nВоcпользуйтесь кнопкой ниже для выбора города"
         )
+    elif state == UserInfoState.communication:
+        bot.reply_to(
+            message, "Вы не указали способы связи!\nВоcпользуйтесь кнопкой ниже для выбора способов связи"
+        )
+    elif state in (UserInfoState.clinic_research.name, UserInfoState.no_clinic_research, UserInfoState.drugs.name):
+        send_next_research(message)
+    elif state is None:
+        bot_start(message)

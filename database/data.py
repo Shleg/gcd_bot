@@ -202,9 +202,36 @@ def query_full_data_item(request_body, headers=None):
         print(f"Error: {response.status_code}, {response.text}")
 
 
+def get_bots_manager_chat_ids() -> list:
+    request_body = {
+        "dataCollectionId": COLLECTION_USERS,
+        "includeReferencedItems": [USER_ROLE_IDs],
+        "query": {
+            "filter": {
+                USER_CHAT_ID: {"$exists": True},
+            },
+            "fields": [USER_CHAT_ID, USER_ROLE_IDs]
+        }
+    }
+
+    request = query_data_items(request_body)
+
+    data_items = request['dataItems']
+
+    # Фильтрация списка для получения tgChatId, где roleName == 'Менеджер бота'
+    manager_bot_chat_ids = [
+        item['data']['tgChatId'] for item in data_items
+        if any(role['roleName'] == 'Менеджер бота' for role in item['data']['idUserRoles'])
+    ]
+
+    return manager_bot_chat_ids
+
+
+
 # DEFAULT_ROLE = [role['data']['roleName'] for role in query_data_items(COLLECTION_ROLES_BODY)['dataItems']]
 DEFAULT_ROLE_LIST = [{role['data']['roleName']: role['id']} for role in
                      query_data_items(COLLECTION_ROLES_BODY)['dataItems']]
+
 DEFAULT_ROLE_DICT = dict((k, v) for d in DEFAULT_ROLE_LIST for k, v in d.items())
 
 # DEFAULT_SPEC = [spec['data']['specializationName'] for spec in query_data_items(COLLECTION_SPECS_BODY)['dataItems']]
@@ -239,16 +266,14 @@ DEFAULT_METHODS_DICT = dict((k, v) for d in DEFAULT_METHODS_LIST for k, v in d.i
 
 test = query_data_items(COLLECTION_TEMPLATE_BODY)['dataItems']
 
+DEFAULT_TEMPLATE_LIST = [{template['data']['templateMessageName']: template['data']['templateMessageDescription']} for
+                         template in query_data_items(COLLECTION_TEMPLATE_BODY)['dataItems']]
 
-# DEFAULT_TEMPLATE_LIST = [{template['data']['templateMessageName']: template['data']['templateMessageDescription']} for
-#                          template in query_data_items(COLLECTION_TEMPLATE_BODY)['dataItems']]
+DEFAULT_TEMPLATE_DICT = dict((k, v) for d in DEFAULT_TEMPLATE_LIST for k, v in d.items())
 
-
-# DEFAULT_TEMPLATE_DICT = dict((k, v) for d in DEFAULT_METHODS_LIST for k, v in d.items())
-
-def generate_template_dict():
-    for template in query_data_items(COLLECTION_TEMPLATE_BODY)['dataItems']:
-        yield {template['data']['templateMessageName']: template['data']['templateMessageDescription']}
-
-
-DEFAULT_TEMPLATE_DICT = dict((k, v) for d in generate_template_dict() for k, v in d.items())
+# def generate_template_dict():
+#     for template in query_data_items(COLLECTION_TEMPLATE_BODY)['dataItems']:
+#         yield {template['data']['templateMessageName']: template['data']['templateMessageDescription']}
+#
+#
+# DEFAULT_TEMPLATE_DICT = dict((k, v) for d in generate_template_dict() for k, v in d.items())
