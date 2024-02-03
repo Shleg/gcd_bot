@@ -161,19 +161,23 @@ def get_drugs(message: Message) -> None:
                 drugs = message.text
                 bot.send_message(message.chat.id, f"Указанные препараты: {drugs}",
                                  reply_markup=types.ReplyKeyboardRemove())
+
+                # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние drugs
+                bot.set_state(message.from_user.id, UserInfoState.drugs, message.chat.id)
+                with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+                    data['drugs'] = drugs
+
+                bot.send_message(message.chat.id,
+                                 f"Для завершения процесса подбора и участия в клинических исследованиях, "
+                                 f"укажите предпочтительный способ связи:",
+                                 reply_markup=request_communication())
             else:
                 bot.send_message(message.chat.id, "Кажется вы отправили ошибочное название. Попробуйте еще раз")
-
-        # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние drugs
-        bot.set_state(message.from_user.id, UserInfoState.drugs, message.chat.id)
-        with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-            data['drugs'] = drugs
-
-        bot.send_message(message.chat.id,
-                         f"Для завершения процесса подбора и участия в клинических исследованиях, "
-                         f"укажите предпочтительный способ связи:",
-                         reply_markup=request_communication())
-
+                bot.send_message(
+                    message.chat.id,
+                    "Выберите группу препаратов из списка или введите вручную:",
+                    reply_markup=request_drugs()
+                )
     except json.JSONDecodeError:
         logging.error(f"Ошибка при обработке данных из веб-приложения {message.chat.id}")
     except Exception as e:

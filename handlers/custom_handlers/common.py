@@ -66,7 +66,7 @@ def get_specialization(message: Message):
                 bot.send_message(
                     message.chat.id, DEFAULT_TEMPLATE_DICT.get('CITY_RESEARCHER_TEXT'), reply_markup=request_city())
         else:
-            bot.send_message(message.chat.id, "Вы не выбрали специализацию! Попробуйте еще раз")
+            bot.send_message(message.chat.id, "Вы ничего не указали! Попробуйте еще раз")
     except json.JSONDecodeError:
         logging.error(f"Ошибка при обработке данных из веб-приложения {message.chat.id}")
     except Exception as e:

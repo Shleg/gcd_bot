@@ -23,7 +23,7 @@ def bot_echo(message: Message):
         bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'), reply_markup=request_role())
     elif state == UserInfoState.role.name:
         bot.reply_to(
-            message, "Вы не выбрали специализацию!\nВоcпользуйтесь кнопкой ниже для выбора специализации"
+            message, "Вы ничего не выбрали!\nВоcпользуйтесь кнопкой ниже для выбора данных"
         )
     elif state == UserInfoState.specialization.name:
         bot.reply_to(
