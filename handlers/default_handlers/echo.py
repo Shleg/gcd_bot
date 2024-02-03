@@ -42,7 +42,7 @@ def bot_echo(message: Message):
         bot.reply_to(
             message, "Вы полностью прошли опрос!\nДля перезапуска выберите команду или введите команду '/start'"
         )
-    elif state in (UserInfoState.clinic_research.name, UserInfoState.no_clinic_research, UserInfoState.drugs.name):
+    elif state in (UserInfoState.clinic_research.name, UserInfoState.no_clinic_research.name, UserInfoState.drugs.name):
         send_next_research(message)
     elif state is None:
         bot_start(message)
