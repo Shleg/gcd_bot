@@ -55,8 +55,9 @@ def get_city(message: Message) -> None:
             with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
                 data['city'] = cities
 
-            bot.send_message(message.chat.id,
-                             f"Техническое сообщение - состояние пользователя: {bot.get_state(message.from_user.id)}")
+            # bot.send_message(message.chat.id,
+            #                  f"Техническое сообщение - состояние пользователя: {bot.get_state(message.from_user.id)}")
+
             bot.send_message(message.chat.id,
                              f"Заболевание? (конкретный диагноз)")
         else:

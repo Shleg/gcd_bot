@@ -5,7 +5,7 @@ from telebot.types import Message
 from database.data import DEFAULT_TEMPLATE_DICT
 from handlers.custom_handlers.referral import send_next_research
 from handlers.default_handlers.start import bot_start
-from keyboards.inline.inline import request_role
+from keyboards.inline.inline import request_role, request_phase, request_condition
 from states.user_states import UserInfoState
 from loader import bot
 
@@ -21,6 +21,18 @@ def bot_echo(message: Message):
         bot.reply_to(
             message, "Вы не выбрали роль!")
         bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'), reply_markup=request_role())
+    elif state == UserInfoState.criteria:
+        # Удаление клавиатуры
+        bot.edit_message_reply_markup(message.chat.id, message.message_id - 1, reply_markup=None)
+        bot.reply_to(
+            message, "Вы не выбрали роль!")
+        bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'), reply_markup=request_condition())
+    elif state == UserInfoState.phase:
+        # Удаление клавиатуры
+        bot.edit_message_reply_markup(message.chat.id, message.message_id - 1, reply_markup=None)
+        bot.reply_to(
+            message, "Вы не выбрали роль!")
+        bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'), reply_markup=request_phase())
     elif state == UserInfoState.role.name:
         bot.reply_to(
             message, "Вы ничего не выбрали!\nВоcпользуйтесь кнопкой ниже для выбора данных"
@@ -29,7 +41,7 @@ def bot_echo(message: Message):
         bot.reply_to(
             message, "Вы не выбрали город!\nВоcпользуйтесь кнопкой ниже для выбора города"
         )
-    elif state in (UserInfoState.city.name, UserInfoState.city_area.name):
+    elif state in (UserInfoState.city.name, UserInfoState.area.name):
         bot.reply_to(
             message, "Вы не выбрали город!\nВоcпользуйтесь кнопкой ниже для выбора города"
         )
