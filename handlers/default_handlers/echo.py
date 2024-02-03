@@ -38,6 +38,10 @@ def bot_echo(message: Message):
         bot.reply_to(
             message, "Вы не указали способы связи!\nВоcпользуйтесь кнопкой ниже для выбора способов связи"
         )
+    elif state == UserInfoState.end:
+        bot.reply_to(
+            message, "Вы полностью прошли опрос!\nДля перезапуска выберите команду или введите команду '/start'"
+        )
     elif state in (UserInfoState.clinic_research.name, UserInfoState.no_clinic_research, UserInfoState.drugs.name):
         send_next_research(message)
     elif state is None:
