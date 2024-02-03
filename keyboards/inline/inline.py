@@ -5,7 +5,7 @@ import emoji
 from telebot import types
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
-from database.data import DEFAULT_PHASES_DICT
+from database.data import DEFAULT_PHASES_DICT, DEFAULT_CONDITION_DICT
 from database.config_data import BOT_FORM
 
 
@@ -40,10 +40,10 @@ def submit_request() -> InlineKeyboardMarkup:
 
 def request_condition() -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup()
-    keyboard.add(
-        InlineKeyboardButton('Стационар', callback_data='condition:1'),
-        InlineKeyboardButton('Амбулатория', callback_data='condition:2')
-    )
+    for condition in list(DEFAULT_CONDITION_DICT.keys())[::-1]:
+        keyboard.add(
+            InlineKeyboardButton(condition, callback_data=f'condition:{condition}')
+        )
     return keyboard
 
 

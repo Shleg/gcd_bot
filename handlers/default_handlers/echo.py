@@ -26,13 +26,23 @@ def bot_echo(message: Message):
         bot.edit_message_reply_markup(message.chat.id, message.message_id - 1, reply_markup=None)
         bot.reply_to(
             message, "Вы не выбрали условия исследования!")
-        bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'), reply_markup=request_condition())
+        bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('RESEARCH_CONDITION'), reply_markup=request_condition())
+
     elif state == UserInfoState.conditions.name:
         # Удаление клавиатуры
         bot.edit_message_reply_markup(message.chat.id, message.message_id - 1, reply_markup=None)
         bot.reply_to(
             message, "Вы не выбрали фазу исследования!")
-        bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'), reply_markup=request_phase())
+        bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('PHASE_TEXT'), reply_markup=request_phase())
+
+    elif state == UserInfoState.phase.name:
+        bot.reply_to(
+            message, "Вы ничего не выбрали!\nВоcпользуйтесь кнопкой ниже для выбора данных"
+        )
+    elif state == UserInfoState.drugs.name:
+        bot.reply_to(
+            message, "Вы ничего не выбрали!\nВоcпользуйтесь кнопкой ниже для выбора данных"
+        )
 
     elif state == UserInfoState.role.name:
         bot.reply_to(
@@ -54,7 +64,7 @@ def bot_echo(message: Message):
         bot.reply_to(
             message, "Вы полностью прошли опрос!\nДля перезапуска выберите команду или введите команду '/start'"
         )
-    elif state in (UserInfoState.clinic_research.name, UserInfoState.no_clinic_research.name, UserInfoState.drugs.name):
+    elif state in (UserInfoState.clinic_research.name, UserInfoState.no_clinic_research.name):
         send_next_research(message)
     elif state is None:
         bot_start(message)

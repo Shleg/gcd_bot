@@ -1,7 +1,11 @@
 import json
 import time
 
-from database.data import DEFAULT_TEMPLATE_DICT
+from database.config_data import COLLECTION_USERS, USER_ROLE_IDs, USER_CITY_ID, COLLECTION_RESEARCHES, RESEARCH_NAME, \
+    RESEARCH_DOCTOR_ID, RESEARCH_CITY_ID, RESEARCH_DIAG_NAME, RESEARCH_CRITERIA_DESC, RESEARCH_CONDITION_IDS, \
+    RESEARCH_PHASE_IDS, COLLECTION_DRUGS, RESEARCHES_DRUGS
+from database.data import DEFAULT_TEMPLATE_DICT, DEFAULT_ROLE_DICT, replace_data_item_reference, DEFAULT_CITY_DICT, \
+    save_data_item, DEFAULT_CONDITION_DICT, DEFAULT_PHASES_DICT, DEFAULT_DRUGS_DICT
 from keyboards.reply.web_app import request_area, request_drugs, request_communication
 from keyboards.inline.inline import request_condition, request_phase
 from loader import bot
@@ -12,15 +16,16 @@ from telebot import types
 import logging
 
 
-@bot.callback_query_handler(func=lambda call: call.data.startswith('role:Врач-исследователь'), state=UserInfoState.initial)
+@bot.callback_query_handler(func=lambda call: call.data.startswith('role:Врач-исследователь'),
+                            state=UserInfoState.initial)
 def callback_handler(call) -> None:
     try:
-        data = call.data
+        message_data = call.data
 
         # Удаление клавиатуры
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
-        role = data.split(':')[1]  # Получаем роль после префикса
+        role = message_data.split(':')[1]  # Получаем роль после префикса
 
         bot.answer_callback_query(call.id)
         bot.send_message(call.message.chat.id, f"Вы выбрали роль: {role}")
@@ -29,6 +34,36 @@ def callback_handler(call) -> None:
         bot.set_state(call.from_user.id, UserInfoState.role)
         with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
             data['role'] = role
+
+        request_body_users = {
+            "dataCollectionId": COLLECTION_USERS,
+            "referringItemFieldName": USER_ROLE_IDs,
+            "referringItemId": data.get('id'),
+            "newReferencedItemIds": [DEFAULT_ROLE_DICT.get(role)]
+        }
+
+        replace_data_item_reference(request_body_users)
+
+        request_body_new_research = {
+            "dataCollectionId": COLLECTION_RESEARCHES,
+            "dataItem": {
+                "data": {
+                    RESEARCH_NAME: 'NEW RESEARCH'
+                }
+            }
+        }
+
+        new_research = save_data_item(request_body_new_research)
+
+        data['research_id'] = new_research['dataItem']['id']
+
+        request_body_users = {
+            "dataCollectionId": COLLECTION_RESEARCHES,
+            "referringItemFieldName": RESEARCH_DOCTOR_ID,
+            "referringItemId": data.get('research_id'),
+            "newReferencedItemIds": [data.get('id')]
+        }
+        replace_data_item_reference(request_body_users)
 
         bot.send_message(
             call.message.chat.id,
@@ -53,13 +88,27 @@ def get_city(message: Message) -> None:
             # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние city_area
             bot.set_state(message.from_user.id, UserInfoState.city_area, message.chat.id)
             with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-                data['city'] = cities
+                data['city'] = data_ids
 
-            # bot.send_message(message.chat.id,
-            #                  f"Техническое сообщение - состояние пользователя: {bot.get_state(message.from_user.id)}")
+            request_body = {
+                "dataCollectionId": COLLECTION_USERS,
+                "referringItemFieldName": USER_CITY_ID,
+                "referringItemId": data.get('id'),
+                "newReferencedItemIds": [DEFAULT_CITY_DICT.get(city) for city in data_ids]
+            }
+            replace_data_item_reference(request_body)
+
+            request_body = {
+                "dataCollectionId": COLLECTION_RESEARCHES,
+                "referringItemFieldName": RESEARCH_CITY_ID,
+                "referringItemId": data.get('research_id'),
+                "newReferencedItemIds": [DEFAULT_CITY_DICT.get(city) for city in data_ids]
+            }
+            replace_data_item_reference(request_body)
 
             bot.send_message(message.chat.id,
                              f"Заболевание? (конкретный диагноз)")
+
         else:
             bot.send_message(message.chat.id, "Вы не выбрали город! Попробуйте еще раз")
     except json.JSONDecodeError:
@@ -73,12 +122,25 @@ def get_contact(message: Message) -> None:
     # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние diagnosis
     bot.set_state(message.from_user.id, UserInfoState.diagnosis, message.chat.id)
     with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-        data['diagnosis'] = message.text
+        data['diagnosis_name'] = message.text
 
-    time.sleep(1)
+    request_body = {
+        "dataCollectionId": COLLECTION_RESEARCHES,
+        "dataItem": {
+            "id": data.get('research_id'),
+            "data": {
+                "_id": data.get('research_id'),
+                RESEARCH_NAME: 'NEW RESEARCH',
+                RESEARCH_DIAG_NAME: data.get('diagnosis_name')
+            }
+        }
+    }
+    save_data_item(request_body)
+
+    time.sleep(0.5)
     bot.send_message(message.from_user.id, f'Опишите самые важные критерии включения/невключения пациента '
                                            f'в исследование')
-    time.sleep(1)
+    time.sleep(0.5)
     bot.send_message(message.from_user.id, f'В том числе пол/возраст пациента.\n'
                                            f'Не вдавайтесь в подробности, не нарушайте конфиденциальность')
 
@@ -92,7 +154,22 @@ def get_contact(message: Message) -> None:
     # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние criteria
     bot.set_state(message.from_user.id, UserInfoState.criteria, message.chat.id)
     with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-        data['diagnosis'] = message.text
+        data['criteria'] = message.text
+
+    request_body = {
+        "dataCollectionId": COLLECTION_RESEARCHES,
+        "dataItem": {
+            "id": data.get('research_id'),
+            "data": {
+                "_id": data.get('research_id'),
+                RESEARCH_NAME: 'NEW RESEARCH',
+                RESEARCH_DIAG_NAME: data.get('diagnosis_name'),
+                RESEARCH_CRITERIA_DESC: data.get('criteria'),
+            }
+        }
+    }
+
+    save_data_item(request_body)
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('condition:'), state=UserInfoState.criteria)
@@ -102,16 +179,25 @@ def get_condition(call) -> None:
         # Удаление клавиатуры
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
-        request = data.split(':')[1]
+        condition = data.split(':')[1]
 
         # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние conditions
         bot.set_state(call.from_user.id, UserInfoState.conditions)
         with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
-            data['condition'] = request
+            data['condition_id'] = DEFAULT_CONDITION_DICT.get(condition)
+
+
+        request_body = {
+            "dataCollectionId": COLLECTION_RESEARCHES,
+            "referringItemFieldName": RESEARCH_CONDITION_IDS,
+            "referringItemId": data.get('research_id'),
+            "newReferencedItemIds": [data['condition_id']]
+        }
+        replace_data_item_reference(request_body)
 
         bot.send_message(
             call.message.chat.id,
-            "Выберите фазу исследований",
+            DEFAULT_TEMPLATE_DICT.get('PHASE_TEXT'),
             reply_markup=request_phase()
         )
 
@@ -123,12 +209,20 @@ def get_condition(call) -> None:
         # Удаление клавиатуры
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
 
-        request = data.split(':')[1]
+        phase = data.split(':')[1]
 
         # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние phase
         bot.set_state(call.from_user.id, UserInfoState.phase)
         with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
-            data['phase'] = request
+            data['phase_id'] = DEFAULT_PHASES_DICT.get(phase)
+
+        request_body = {
+            "dataCollectionId": COLLECTION_RESEARCHES,
+            "referringItemFieldName": RESEARCH_PHASE_IDS,
+            "referringItemId": data.get('research_id'),
+            "newReferencedItemIds": [data['phase_id']]
+        }
+        replace_data_item_reference(request_body)
 
         bot.send_message(
             call.message.chat.id,
@@ -137,7 +231,7 @@ def get_condition(call) -> None:
         )
 
 
-@bot.message_handler(content_types=['web_app_data', 'text'], state=UserInfoState.phase)
+@bot.message_handler(content_types='web_app_data', state=UserInfoState.phase)
 def get_drugs(message: Message) -> None:
     try:
         drugs = None
@@ -152,36 +246,49 @@ def get_drugs(message: Message) -> None:
                 drugs = ", ".join(data_ids)
                 bot.send_message(message.chat.id, f"Выбранные препараты: {drugs}",
                                  reply_markup=types.ReplyKeyboardRemove())
-
-            else:
-                bot.send_message(message.chat.id, "Вы не выбрали препараты! Попробуйте еще раз")
-
-        elif message.content_type == 'text':
-            if len(message.text) > 5:
-                # Обработка полученных данных
-                drugs = message.text
-                bot.send_message(message.chat.id, f"Указанные препараты: {drugs}",
-                                 reply_markup=types.ReplyKeyboardRemove())
-
-                # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние drugs
                 bot.set_state(message.from_user.id, UserInfoState.drugs, message.chat.id)
                 with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-                    data['drugs'] = drugs
+                    data['drugs'] = data_ids
+
+                request_body = {
+                    "dataCollectionId": COLLECTION_RESEARCHES,
+                    "referringItemFieldName": RESEARCHES_DRUGS,
+                    "referringItemId": data.get('research_id'),
+                    "newReferencedItemIds": [DEFAULT_DRUGS_DICT.get(drug) for drug in data_ids]
+                }
+                replace_data_item_reference(request_body)
 
                 bot.send_message(message.chat.id,
-                                 f"Для завершения процесса подбора и участия в клинических исследованиях, "
-                                 f"укажите предпочтительный способ связи:",
+                                 DEFAULT_TEMPLATE_DICT.get('REQUEST_COMMUNICATION_TEXT'),
                                  reply_markup=request_communication())
             else:
-                bot.send_message(message.chat.id, "Кажется вы отправили ошибочное название. Попробуйте еще раз",
-                                 reply_markup=types.ReplyKeyboardRemove())
-                bot.send_message(
-                    message.chat.id,
-                    "Выберите группу препаратов из списка или введите вручную:",
-                    reply_markup=request_drugs()
-                )
+                bot.send_message(message.chat.id, "Вы не выбрали препараты! Попробуйте еще раз")
     except json.JSONDecodeError:
-        logging.error(f"Ошибка при обработке данных из веб-приложения {message.chat.id}")
+                logging.error(f"Ошибка при обработке данных из веб-приложения {message.chat.id}")
     except Exception as e:
-        logging.exception(e)
+            logging.exception(e)
 
+        # elif message.content_type == 'text':
+        #     if len(message.text) > 5:
+        #         # Обработка полученных данных
+        #         drugs = message.text
+        #         bot.send_message(message.chat.id, f"Указанные препараты: {drugs}",
+        #                          reply_markup=types.ReplyKeyboardRemove())
+        #
+        #         # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние drugs
+        #         bot.set_state(message.from_user.id, UserInfoState.drugs, message.chat.id)
+        #         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+        #             data['drugs'] = drugs
+        #
+                # bot.send_message(message.chat.id,
+                #                  f"Для завершения процесса подбора и участия в клинических исследованиях, "
+                #                  f"укажите предпочтительный способ связи:",
+                #                  reply_markup=request_communication())
+        #     else:
+        #         bot.send_message(message.chat.id, "Кажется вы отправили ошибочное название. Попробуйте еще раз",
+        #                          reply_markup=types.ReplyKeyboardRemove())
+        #         bot.send_message(
+        #             message.chat.id,
+        #             "Выберите группу препаратов из списка или введите вручную:",
+        #             reply_markup=request_drugs()
+        #         )

@@ -6,7 +6,7 @@ from telebot import types
 from telebot.types import Message
 
 from database.config_data import COLLECTION_USERS, USER_SPEC_IDs, USER_PREF_CONTACT, USER_CONTACT_INFO, USER_NAME, \
-    USER_TG_NAME, USER_CHAT_ID, USER_STATE, USER_ROLE_IDs
+    USER_TG_NAME, USER_CHAT_ID, USER_STATE, USER_ROLE_IDs, COLLECTION_RESEARCHES, RESEARCH_SPEC_ID
 from database.data import DEFAULT_SPEC_DICT, replace_data_item_reference, save_data_item, DEFAULT_METHODS_DICT, \
     DEFAULT_ROLE_DICT, query_data_items, DEFAULT_TEMPLATE_DICT, get_bots_manager_chat_ids
 from keyboards.reply.web_app import request_telegram, request_city
@@ -32,7 +32,7 @@ def get_specialization(message: Message):
 
                 bot.set_state(message.from_user.id, UserInfoState.specialization, message.chat.id)
                 with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-                    data['spec'] = specializations
+                    data['spec'] = data_ids
 
                 request_body = {
                     "dataCollectionId": COLLECTION_USERS,
@@ -53,12 +53,20 @@ def get_specialization(message: Message):
                 # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние area
                 bot.set_state(message.from_user.id, UserInfoState.area, message.chat.id)
                 with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-                    data['area'] = area
+                    data['area'] = data_ids
 
                 request_body = {
                     "dataCollectionId": COLLECTION_USERS,
                     "referringItemFieldName": USER_SPEC_IDs,
                     "referringItemId": data.get('id'),
+                    "newReferencedItemIds": [DEFAULT_SPEC_DICT.get(spec) for spec in data_ids]
+                }
+                replace_data_item_reference(request_body)
+
+                request_body = {
+                    "dataCollectionId": COLLECTION_RESEARCHES,
+                    "referringItemFieldName": RESEARCH_SPEC_ID,
+                    "referringItemId": data.get('research_id'),
                     "newReferencedItemIds": [DEFAULT_SPEC_DICT.get(spec) for spec in data_ids]
                 }
                 replace_data_item_reference(request_body)

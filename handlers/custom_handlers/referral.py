@@ -101,11 +101,15 @@ def select_researches(message: Message):
             specs = data.get('spec')
 
         research_list = query_full_data_item(COLLECTION_RESEARCHES_BODY)
+        research_city = list()
+        research_spec = list()
         for research in research_list['dataItems']:
-            research_city = research['data']['citiyId']['cityName']
-            research_spec = research['data']['specializationsId']['specializationName']
 
-            if research_city in cities and research_spec in specs:
+            if research['data']['citiyId'] and research['data']['specializationsId']:
+                research_city = [city.get('cityName', None) for city in research['data']['citiyId'] if city]
+                research_spec = [spec.get('specializationName', None) for spec in research['data']['specializationsId'] if spec]
+
+            if set(research_city) & set(cities) and set(research_spec) & set(specs):
                 suitable_researches.append(research)
 
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
@@ -161,7 +165,7 @@ def send_next_research(message: Message):
             suitable_research = suitable_researches[index]
             data['suitable_research_name'] = suitable_research['data']['clinicalStudiesName']
             suitable_research_name = suitable_research['data']['clinicalStudiesName']
-            doctor_id = f"{suitable_research['data']['researcherDoctorId']['_id']}"
+            doctor_id = f"{suitable_research['data']['researcherDoctorId'][0]['_id']}"
             bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('IS_SELECTED_TEXT').format(suitable_research_name),
                              reply_markup=request_doctor_contact(doctor_id))
             data['current_research_index'] = index + 1

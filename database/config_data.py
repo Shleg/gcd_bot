@@ -66,7 +66,7 @@ COLLECTION_RESEARCHES_BODY = {
     "dataCollectionId": COLLECTION_RESEARCHES,
     "query": {
         "filter": {
-            "isModerationApproved": True
+            "isModerationApproved": True,
         }
     },
     "includeReferencedItems": ['specializationsId', 'citiyId', 'researcherDoctorId']
@@ -77,10 +77,10 @@ RESEARCH_DOCTOR_ID = 'researcherDoctorId'
 RESEARCH_SPEC_ID = 'specializationsId'
 RESEARCH_CITY_ID = 'citiyId'
 RESEARCH_DIAG_NAME = 'diagnosisName'
-# researchCriteriaDescription
-# studyConditionId
-# researchPhaseId
-# drugGroupId
+RESEARCH_CRITERIA_DESC = 'researchCriteriaDescription'
+RESEARCH_CONDITION_IDS = 'studyConditionId'
+RESEARCH_PHASE_IDS = 'researchPhaseId'
+RESEARCHES_DRUGS = 'drugGroupId'
 # isModerationApproved
 # botUsers-clinicalStudiesIds
 
@@ -106,4 +106,9 @@ COLLECTION_METHODS_BODY = {
 COLLECTION_TEMPLATE = 'botTemplateMessageSettings'
 COLLECTION_TEMPLATE_BODY = {
     "dataCollectionId": COLLECTION_TEMPLATE
+}
+
+COLLECTION_CONDITION = 'botStudyConditionsCatalog'
+COLLECTION_CONDITION_BODY = {
+    "dataCollectionId": COLLECTION_CONDITION
 }

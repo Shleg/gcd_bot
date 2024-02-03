@@ -73,8 +73,8 @@ def request_area() -> ReplyKeyboardMarkup:
 
 
 def request_drugs() -> ReplyKeyboardMarkup:
-    specializations = list(DEFAULT_DRUGS_DICT.keys()) # Список препаратов
-    serialized_data = json.dumps(specializations)
+    drugs = list(DEFAULT_DRUGS_DICT.keys()) # Список препаратов
+    serialized_data = json.dumps(drugs)
     encoded_data = urllib.parse.quote(serialized_data)
 
     web_app_url = f"{BOT_FORM}?data={encoded_data}"
