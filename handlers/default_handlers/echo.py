@@ -33,11 +33,11 @@ def bot_echo(message: Message):
         bot.reply_to(
             message, "Вы не выбрали город!\nВоcпользуйтесь кнопкой ниже для выбора города"
         )
-    elif state == UserInfoState.communication:
+    elif state == UserInfoState.communication.name:
         bot.reply_to(
             message, "Вы не указали способы связи!\nВоcпользуйтесь кнопкой ниже для выбора способов связи"
         )
-    elif state == UserInfoState.end:
+    elif state == UserInfoState.end.name:
         bot.reply_to(
             message, "Вы полностью прошли опрос!\nДля перезапуска выберите команду или введите команду '/start'"
         )
