@@ -155,6 +155,7 @@ def send_next_research(message: Message):
         with bot.retrieve_data(message.chat.id) as data:
             suitable_researches = data.get('suitable_researches', [])
             index = data.get('current_research_index', 0)
+            state = data.get('state')
 
         if index < len(suitable_researches):
             suitable_research = suitable_researches[index]
@@ -166,8 +167,17 @@ def send_next_research(message: Message):
             data['current_research_index'] = index + 1
 
         else:
-            bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('REQUEST_COMMUNICATION_TEXT').format(data.get('city'), data.get('spec')),
-                             reply_markup=request_communication())
+            if state == UserInfoState.no_clinic_research:
+                bot.send_message(message.chat.id,
+                                 DEFAULT_TEMPLATE_DICT.get('REQUEST_COMMUNICATION_TEXT_NO_RESEARCH').format(data.get('city'),
+                                                                                                data.get('spec')),
+                                 reply_markup=request_communication())
+            else:
+                bot.send_message(message.chat.id,
+                                 DEFAULT_TEMPLATE_DICT.get('REQUEST_COMMUNICATION_TEXT').format(data.get('city'),
+                                                                                                data.get('spec')),
+                                 reply_markup=request_communication())
+
     except Exception as e:
         logging.exception(e)
 
