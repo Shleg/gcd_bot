@@ -21,18 +21,19 @@ def bot_echo(message: Message):
         bot.reply_to(
             message, "Вы не выбрали роль!")
         bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'), reply_markup=request_role())
-    elif state == UserInfoState.criteria:
+    elif state == UserInfoState.criteria.name:
         # Удаление клавиатуры
         bot.edit_message_reply_markup(message.chat.id, message.message_id - 1, reply_markup=None)
         bot.reply_to(
-            message, "Вы не выбрали роль!")
+            message, "Вы не выбрали условия исследования!")
         bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'), reply_markup=request_condition())
-    elif state == UserInfoState.phase:
+    elif state == UserInfoState.conditions.name:
         # Удаление клавиатуры
         bot.edit_message_reply_markup(message.chat.id, message.message_id - 1, reply_markup=None)
         bot.reply_to(
-            message, "Вы не выбрали роль!")
+            message, "Вы не выбрали фазу исследования!")
         bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'), reply_markup=request_phase())
+
     elif state == UserInfoState.role.name:
         bot.reply_to(
             message, "Вы ничего не выбрали!\nВоcпользуйтесь кнопкой ниже для выбора данных"

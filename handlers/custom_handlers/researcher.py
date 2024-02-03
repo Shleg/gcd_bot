@@ -1,7 +1,7 @@
 import json
 import time
 
-
+from database.data import DEFAULT_TEMPLATE_DICT
 from keyboards.reply.web_app import request_area, request_drugs, request_communication
 from keyboards.inline.inline import request_condition, request_phase
 from loader import bot
@@ -86,7 +86,7 @@ def get_contact(message: Message) -> None:
 @bot.message_handler(content_types=['text'], state=UserInfoState.diagnosis)
 def get_contact(message: Message) -> None:
     bot.send_message(message.from_user.id,
-                     "Исследование проводится в условиях амбулатории/стационара?",
+                     DEFAULT_TEMPLATE_DICT.get('RESEARCH_CONDITION'),
                      reply_markup=request_condition()
                      )
     # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние criteria
@@ -157,7 +157,7 @@ def get_drugs(message: Message) -> None:
                 bot.send_message(message.chat.id, "Вы не выбрали препараты! Попробуйте еще раз")
 
         elif message.content_type == 'text':
-            if len(message.text) < 4:
+            if len(message.text) > 5:
                 # Обработка полученных данных
                 drugs = message.text
                 bot.send_message(message.chat.id, f"Указанные препараты: {drugs}",
