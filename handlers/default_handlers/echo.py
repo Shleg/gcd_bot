@@ -16,6 +16,8 @@ def bot_echo(message: Message):
     state = bot.get_state(message.from_user.id, message.chat.id)
 
     if state == UserInfoState.initial.name:
+        # Удаление клавиатуры
+        bot.edit_message_reply_markup(message.chat.id, message.message_id - 1, reply_markup=None)
         bot.reply_to(
             message, "Вы не выбрали роль!", reply_markup=None
         )

@@ -20,6 +20,7 @@ from telebot import types
 def callback_handler(call) -> None:
     try:
         data = call.data
+
         if data.startswith('role:'):
 
             # Удаление клавиатуры
@@ -186,7 +187,7 @@ def get_doctor_contact(call):
         doctor_name = f"{doctor['dataItem']['data']['doctorName']}"
         doctor_contact = f"{doctor['dataItem']['data']['contactInfo']}"
 
-        contact_info_message = f"Исследование: {suitable_research_name}\n,Имя врача: {doctor_name}\nКонтактные данные: {doctor_contact}"
+        contact_info_message = f"Исследование: {suitable_research_name}\nИмя врача: {doctor_name}\nКонтактные данные: {doctor_contact}"
         bot.send_message(call.message.chat.id, contact_info_message)
 
     else:
