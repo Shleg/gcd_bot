@@ -29,7 +29,7 @@ def bot_echo(message: Message):
         bot.reply_to(
             message, "Вы не выбрали город!\nВоcпользуйтесь кнопкой ниже для выбора города"
         )
-    elif state == UserInfoState.city.name:
+    elif state in (UserInfoState.city.name, UserInfoState.city_area.name):
         bot.reply_to(
             message, "Вы не выбрали город!\nВоcпользуйтесь кнопкой ниже для выбора города"
         )

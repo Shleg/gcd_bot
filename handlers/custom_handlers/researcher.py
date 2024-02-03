@@ -172,7 +172,8 @@ def get_drugs(message: Message) -> None:
                                  f"укажите предпочтительный способ связи:",
                                  reply_markup=request_communication())
             else:
-                bot.send_message(message.chat.id, "Кажется вы отправили ошибочное название. Попробуйте еще раз")
+                bot.send_message(message.chat.id, "Кажется вы отправили ошибочное название. Попробуйте еще раз",
+                                 reply_markup=types.ReplyKeyboardRemove())
                 bot.send_message(
                     message.chat.id,
                     "Выберите группу препаратов из списка или введите вручную:",
