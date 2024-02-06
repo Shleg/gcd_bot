@@ -289,8 +289,8 @@ def get_bot_user_name(message: Message) -> None:
             bot.set_state(message.from_user.id, UserInfoState.end, message.chat.id)
             time.sleep(1)
             bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('VACANCY_TEXT').format(data["name"]))
-            time.sleep(1)
-            bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('RESUME_TEXT'))
+            # time.sleep(1)
+            # bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('RESUME_TEXT'))
         else:
             bot.send_message(message.from_user.id, "Имя должно состоять только из букв. Попробуйте еще раз!")
     except Exception as e:

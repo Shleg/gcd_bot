@@ -11,7 +11,6 @@ BOT_FORM = 'https://www.gcd-russia.com/botselect'
 WIX_API_TOKEN = os.getenv("WIX_API_TOKEN")
 WIX_SITE_ID = os.getenv("WIX_SITE_ID")
 
-
 # Описание коллекции Пользователи
 COLLECTION_USERS = 'botUsers'
 COLLECTION_USERS_BODY = {
@@ -54,11 +53,13 @@ SPEC_ID = 'botUsers-specializationId'  # text
 # Описание коллекции Города
 COLLECTION_CITY = 'botCitiesCatalog'
 COLLECTION_CITIES_BODY = {
-    "dataCollectionId": COLLECTION_CITY
+    "dataCollectionId": COLLECTION_CITY,
+    "query": {
+        "sort": [{"fieldName": "sortNumber", "order": "ASC"}]
+    }
 }
 # Описание полей коллекции Города
 CITY_NAME = 'cityName'
-
 
 # Описание коллекции Клинические исследования
 COLLECTION_RESEARCHES = 'botClinicalStudiesLeads'
