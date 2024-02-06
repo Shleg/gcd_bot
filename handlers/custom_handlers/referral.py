@@ -148,8 +148,11 @@ def select_researches(message: Message):
             }
 
             replace_data_item_reference(request_body)
-            bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('NO_SELECTED_TEXT').format(data.get('city'), data.get('spec')),
-                             reply_markup=request_communication())
+
+            city_str = ' ,'.join(data.get('city'))
+            spec_str = ' ,'.join(data.get('spec'))
+            bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('NO_SELECTED_TEXT').format(city_str, spec_str),
+                             parse_mode='Markdown', reply_markup=request_communication())
     except Exception as e:
         logging.exception(e)
 
@@ -171,11 +174,13 @@ def send_next_research(message: Message):
             data['current_research_index'] = index + 1
 
         else:
-            if state == UserInfoState.no_clinic_research.name:
-                bot.send_message(message.chat.id,
-                                 DEFAULT_TEMPLATE_DICT.get('REQUEST_COMMUNICATION_TEXT_NO_RESEARCH').format(data.get('city'),
-                                                                                                data.get('spec')),
-                                 reply_markup=request_communication())
+            if state is 'no_clinic_research':
+                # city_str = ' ,'.join(data.get('city'))
+                # spec_str = ' ,'.join(data.get('spec'))
+                # text = DEFAULT_TEMPLATE_DICT.get('REQUEST_COMMUNICATION_TEXT_NO_RESEARCH').format(city_str, spec_str)
+                text = DEFAULT_TEMPLATE_DICT.get('REQUEST_COMMUNICATION_TEXT_NO_RESEARCH')
+
+                bot.send_message(message.chat.id, text, parse_mode='Markdown', reply_markup=request_communication())
             else:
                 bot.send_message(message.chat.id,
                                  DEFAULT_TEMPLATE_DICT.get('REQUEST_COMMUNICATION_TEXT').format(data.get('city'),

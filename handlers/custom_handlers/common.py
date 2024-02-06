@@ -274,9 +274,11 @@ def get_bot_user_name(message: Message) -> None:
                 if data.get('suitable_research') == 'yes':
                     bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('ROLE_REFERAL_LAST_RESEARCH_TEXT').format(data["name"]))
                 elif data.get('suitable_research') == 'no':
-                    bot.send_message(message.from_user.id,
-                                     DEFAULT_TEMPLATE_DICT.get('ROLE_REFERAL_LAST_NO_RESEARCH_TEXT').format(data["name"], data.get("city"),
-                                                                               data.get("spec")))
+                    city_str = ' ,'.join(data.get('city'))
+                    spec_str = ' ,'.join(data.get('spec'))
+                    user_name = data.get('name', '')
+                    text = DEFAULT_TEMPLATE_DICT.get('ROLE_REFERAL_LAST_NO_RESEARCH_TEXT').format(user_name, city_str, spec_str)
+                    bot.send_message(message.from_user.id, text, parse_mode='Markdown')
             else:
                 bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('LAST_TEXT').format(data["name"]))
 
