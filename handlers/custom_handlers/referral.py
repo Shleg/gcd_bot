@@ -109,8 +109,8 @@ def select_researches(message: Message):
                 research_city = [city.get('cityName', None) for city in research['data']['citiyId'] if city]
                 research_spec = [spec.get('specializationName', None) for spec in research['data']['specializationsId'] if spec]
 
-            if set(research_city) & set(cities) and set(research_spec) & set(specs):
-                suitable_researches.append(research)
+                if set(research_city) & set(cities) and set(research_spec) & set(specs):
+                    suitable_researches.append(research)
 
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
             data['suitable_researches'] = suitable_researches
