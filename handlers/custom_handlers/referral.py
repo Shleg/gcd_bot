@@ -123,15 +123,7 @@ def select_researches(message: Message):
             with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
                 data['state'] = 'clinic_research'
                 data['suitable_research'] = 'yes'
-            #     checked_researches = data.get('checked_researches', [])
-            #
-            # request_body = {
-            #     "dataCollectionId": COLLECTION_USERS,
-            #     "referringItemFieldName": USER_RESEARCH_IDs,
-            #     "referringItemId": data.get('id'),
-            #     "newReferencedItemIds": [research['id'] for research in checked_researches]
-            # }
-            # replace_data_item_reference(request_body)
+
 
             send_next_research(message)
 
@@ -176,7 +168,7 @@ def send_next_research(message: Message):
             data['current_research_index'] = index + 1
 
         else:
-            if state is 'no_clinic_research':
+            if state == 'no_clinic_research':
                 # city_str = ' ,'.join(data.get('city'))
                 # spec_str = ' ,'.join(data.get('spec'))
                 # text = DEFAULT_TEMPLATE_DICT.get('REQUEST_COMMUNICATION_TEXT_NO_RESEARCH').format(city_str, spec_str)
@@ -217,7 +209,7 @@ def get_doctor_contact(call):
     with bot.retrieve_data(call.message.chat.id) as data:
         suitable_research_name = data.get('suitable_research_name')
         checking_research = data.get('checking_research')
-        checked_researches = data.get('checked_researches', [])
+        checked_researches = []
 
     if doctor:
         doctor_name = f"{doctor['dataItem']['data']['doctorName']}"

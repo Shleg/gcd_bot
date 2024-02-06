@@ -100,6 +100,7 @@ def get_communication(message: Message):
                 with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
                     data['comm_methods'] = data_ids
                     data['current_method_index'] = 0
+                    data['contact_info'] = []
 
                 request_body = {
                     "dataCollectionId": COLLECTION_USERS,
@@ -125,10 +126,6 @@ def request_method_contacts(message: Message):
             comm_methods = data.get('comm_methods')
             index = data.get('current_method_index', 0)
 
-        if data.get('contact_info') is None:
-            data['contact_info'] = []
-        else:
-            data.get('contact_info')
 
         if index < len(comm_methods):
             method = comm_methods[index]
@@ -152,7 +149,7 @@ def request_method_contacts(message: Message):
 
             bot.set_state(message.from_user.id, UserInfoState.last, message.chat.id)
             with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-                contact_info = data['contact_info']
+                contact_info = data.get('contact_info')
 
             contact_info_str = '\n'.join(contact_info)
 
@@ -265,10 +262,17 @@ def get_bot_user_name(message: Message) -> None:
             save_data_item(request_body)
             try:
                 for chat_id in get_bots_manager_chat_ids():
-                    bot.send_message(chat_id,
-                                     DEFAULT_TEMPLATE_DICT.get('NOTICE_TEXT').format(data.get('role'), f"@{data.get('tg_name')}"))
+                    try:
+                        bot.send_message(chat_id, DEFAULT_TEMPLATE_DICT.get('NOTICE_TEXT').format(data.get('role'),
+                                                                                                  data.get('tg_name')))
+                    except Exception as e:
+                        logging.exception(e)
+                        # Продолжить выполнение цикла, даже если произошло исключение
+                        continue
             except Exception as e:
                 logging.exception(e)
+
+
 
             if data.get('role') == 'Врач-реферал':
                 if data.get('suitable_research') == 'yes':
