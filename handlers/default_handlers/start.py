@@ -1,3 +1,5 @@
+import time
+
 from telebot import types
 from telebot.types import Message
 
@@ -11,8 +13,13 @@ from states.user_states import UserInfoState
 
 @bot.message_handler(commands=["start"])
 def bot_start(message: Message):
-    bot.reply_to(message, DEFAULT_TEMPLATE_DICT.get('WELCOME_TEXT').format(message.from_user.full_name),
+    bot.reply_to(message, DEFAULT_TEMPLATE_DICT.get('WELCOME_TEXT_1').format(message.from_user.full_name),
                  reply_markup=types.ReplyKeyboardRemove())
+
+    time.sleep(0.5)
+
+    bot.send_message(message.from_user.id,
+                     DEFAULT_TEMPLATE_DICT.get('WELCOME_TEXT_2').format(message.from_user.full_name))
 
     request_body = {
         "dataCollectionId": COLLECTION_USERS,
