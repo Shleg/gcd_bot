@@ -171,7 +171,7 @@ def send_next_research(message: Message):
             data['current_research_index'] = index + 1
 
         else:
-            if state == UserInfoState.no_clinic_research:
+            if state == UserInfoState.no_clinic_research.name:
                 bot.send_message(message.chat.id,
                                  DEFAULT_TEMPLATE_DICT.get('REQUEST_COMMUNICATION_TEXT_NO_RESEARCH').format(data.get('city'),
                                                                                                 data.get('spec')),

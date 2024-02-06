@@ -20,7 +20,7 @@ def request_specialization() -> ReplyKeyboardMarkup:
     keyboard = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=False)
 
     # Создаем кнопку для открытия веб-приложения
-    button = KeyboardButton("Выбрать специализации", web_app=WebAppInfo(url=web_app_url))
+    button = KeyboardButton("🩺  Выбрать специализации", web_app=WebAppInfo(url=web_app_url))
 
     # Добавляем кнопку в клавиатуру
     keyboard.add(button)
@@ -39,7 +39,7 @@ def request_city() -> ReplyKeyboardMarkup:
     keyboard = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=False)
 
     # Создаем кнопку для открытия веб-приложения
-    button = KeyboardButton("Выбрать город", web_app=WebAppInfo(url=web_app_url))
+    button = KeyboardButton("📍  Выбрать город", web_app=WebAppInfo(url=web_app_url))
 
     # Добавляем кнопку в клавиатуру
     keyboard.add(button)

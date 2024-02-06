@@ -24,7 +24,7 @@ def get_specialization(message: Message):
         data_ids = json.loads(message.web_app_data.data)
         button_text = message.web_app_data.button_text
         if isinstance(data_ids, list):
-            if button_text == 'Выбрать специализации':
+            if button_text == '🩺  Выбрать специализации':
                 # Обработка полученных данных
                 specializations = ", ".join(data_ids)
                 bot.send_message(message.chat.id, f"Ваши специализации: {specializations}",
