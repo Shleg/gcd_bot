@@ -12,10 +12,8 @@ from database.config_data import BOT_FORM
 # Функция для создания inline клавиатуры выбора роли
 def request_role() -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup()
-    keyboard.add(
-        InlineKeyboardButton('👩‍⚕️ Врач-реферал', callback_data='role:Врач-реферал'),
-        InlineKeyboardButton('🔬 Врач-исследователь', callback_data='role:Врач-исследователь')
-    )
+    keyboard.add(InlineKeyboardButton('👩‍⚕️ Врач-реферал', callback_data='role:Врач-реферал'))
+    keyboard.add(InlineKeyboardButton('🔬 Врач-исследователь', callback_data='role:Врач-исследователь'))
     return keyboard
 
 
