@@ -20,7 +20,7 @@ def request_role() -> InlineKeyboardMarkup:
 # Функция для создания клавиатуры с кнопкой "Получить контакт врача"
 def request_doctor_contact(doctor_id):
     keyboard = types.InlineKeyboardMarkup()
-    button = types.InlineKeyboardButton("Получить контакт врача-исследователя",
+    button = types.InlineKeyboardButton("🔬 Получить контакт врача-исследователя",
                                         callback_data=f"cont:"
                                                       f"{doctor_id}:")
     keyboard.add(button)
