@@ -266,7 +266,7 @@ def get_bot_user_name(message: Message) -> None:
             try:
                 for chat_id in get_bots_manager_chat_ids():
                     bot.send_message(chat_id,
-                                     DEFAULT_TEMPLATE_DICT.get('NOTICE_TEXT').format(data.get('role'), data.get('tg_name')))
+                                     DEFAULT_TEMPLATE_DICT.get('NOTICE_TEXT').format(data.get('role'), f"@{data.get('tg_name')}"))
             except Exception as e:
                 logging.exception(e)
 

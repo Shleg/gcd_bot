@@ -123,14 +123,15 @@ def select_researches(message: Message):
             with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
                 data['state'] = 'clinic_research'
                 data['suitable_research'] = 'yes'
-
-            request_body = {
-                "dataCollectionId": COLLECTION_USERS,
-                "referringItemFieldName": USER_RESEARCH_IDs,
-                "referringItemId": data.get('id'),
-                "newReferencedItemIds": [research['id'] for research in suitable_researches]
-            }
-            replace_data_item_reference(request_body)
+            #     checked_researches = data.get('checked_researches', [])
+            #
+            # request_body = {
+            #     "dataCollectionId": COLLECTION_USERS,
+            #     "referringItemFieldName": USER_RESEARCH_IDs,
+            #     "referringItemId": data.get('id'),
+            #     "newReferencedItemIds": [research['id'] for research in checked_researches]
+            # }
+            # replace_data_item_reference(request_body)
 
             send_next_research(message)
 
@@ -168,6 +169,7 @@ def send_next_research(message: Message):
             suitable_research = suitable_researches[index]
             data['suitable_research_name'] = suitable_research['data']['clinicalStudiesName']
             suitable_research_name = suitable_research['data']['clinicalStudiesName']
+            data['checking_research'] = suitable_research
             doctor_id = f"{suitable_research['data']['researcherDoctorId'][0]['_id']}"
             bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('IS_SELECTED_TEXT').format(suitable_research_name),
                              reply_markup=request_doctor_contact(doctor_id))
@@ -182,6 +184,19 @@ def send_next_research(message: Message):
 
                 bot.send_message(message.chat.id, text, parse_mode='Markdown', reply_markup=request_communication())
             else:
+
+                checked_researches = data.get('checked_researches', [])
+                if not data.get('research_writed', False):
+                    request_body = {
+                        "dataCollectionId": COLLECTION_USERS,
+                        "referringItemFieldName": USER_RESEARCH_IDs,
+                        "referringItemId": data.get('id'),
+                        "newReferencedItemIds": [research['id'] for research in checked_researches]
+                    }
+                    replace_data_item_reference(request_body)
+
+                    data['research_writed'] = True
+
                 bot.send_message(message.chat.id,
                                  DEFAULT_TEMPLATE_DICT.get('REQUEST_COMMUNICATION_TEXT').format(data.get('city'),
                                                                                                 data.get('spec')),
@@ -201,13 +216,18 @@ def get_doctor_contact(call):
 
     with bot.retrieve_data(call.message.chat.id) as data:
         suitable_research_name = data.get('suitable_research_name')
+        checking_research = data.get('checking_research')
+        checked_researches = data.get('checked_researches', [])
 
     if doctor:
         doctor_name = f"{doctor['dataItem']['data']['doctorName']}"
         doctor_contact = f"{doctor['dataItem']['data']['contactInfo']}"
 
         contact_info_message = f"Исследование: {suitable_research_name}\nИмя врача: {doctor_name}\nКонтактные данные: {doctor_contact}"
+        checked_researches.append(checking_research)
+        data['checked_researches'] = checked_researches
         bot.send_message(call.message.chat.id, contact_info_message)
+
 
     else:
         bot.send_message(call.message.chat.id, "Информация о враче не найдена.")
