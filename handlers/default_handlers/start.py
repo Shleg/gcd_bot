@@ -68,7 +68,7 @@ def bot_start(message: Message):
                                  DEFAULT_TEMPLATE_DICT.get('ADMIN_TEXT').format(message.from_user.full_name))
             else:
                 bot.send_message(
-                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('RETURN_TEXT').format(data.get("tg_name")))
+                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('RETURN_TEXT').format(message.from_user.full_name))
                 bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'), reply_markup=request_role())
 
             # user_state = string_to_state(data['state'])
