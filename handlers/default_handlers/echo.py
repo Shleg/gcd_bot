@@ -185,7 +185,7 @@ def bot_echo(message: Message):
                     "_id": data.get('research_id'),
                     RESEARCH_NAME: 'NEW RESEARCH',
                     RESEARCHES_DIF_SPEC: data.get('user_dif_spec', ''),
-                    RESEARCHES_DIF_CITY: data.get('user_dif_spec', ''),
+                    RESEARCHES_DIF_CITY: data.get('user_dif_city', ''),
                     RESEARCH_DIAG_NAME: data.get('diagnosis_name', ''),
                     RESEARCH_CRITERIA_DESC: data.get('criteria', ''),
                     RESEARCHES_DIF_DRUGS: data.get('research_dif_drugs', ''),

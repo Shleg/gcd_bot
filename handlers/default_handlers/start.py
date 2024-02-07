@@ -52,6 +52,8 @@ def bot_start(message: Message):
                 data['name'] = user['dataItem']['data'].get('doctorName')
                 data['tg_name'] = user['dataItem']['data']['tgName']
                 data['chat_id'] = user['dataItem']['data']['tgChatId']
+                data['user_dif_spec'] = ''
+                data['user_dif_city'] = ''
                 # data['state'] = user['dataItem']['data'].get('newField')
 
             request_body = {
@@ -96,6 +98,9 @@ def bot_start(message: Message):
             data['_id'] = new_user['dataItem']['data']['_id']
             data['chat_id'] = new_user['dataItem']['data']['tgChatId']
             data['tg_name'] = new_user['dataItem']['data']['tgName']
+            data['user_dif_spec'] = ''
+            data['user_dif_city'] = ''
+
             # data['state'] = bot.get_state(message.from_user.id)
 
         bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'), parse_mode='Markdown', reply_markup=request_role())
