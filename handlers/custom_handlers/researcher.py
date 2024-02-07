@@ -28,7 +28,7 @@ def callback_handler(call) -> None:
         role = message_data.split(':')[1]  # Получаем роль после префикса
 
         bot.answer_callback_query(call.id)
-        bot.send_message(call.message.chat.id, f"Вы выбрали роль: {role}", parse_mode='Markdown',)
+        bot.send_message(call.message.chat.id, f"Вы выбрали роль: {role}", parse_mode='Markdown', )
 
         # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние role
         bot.set_state(call.from_user.id, UserInfoState.role)
@@ -116,7 +116,12 @@ def get_city(message: Message) -> None:
         logging.exception(e)
 
 
-@bot.message_handler(content_types=['text'], state=UserInfoState.city_area)
+# Функция-предикат для фильтрации команд /start и /help
+def not_start_help_command(message: Message):
+    return not message.text.startswith('/start') and not message.text.startswith('/help')
+
+
+@bot.message_handler(func=not_start_help_command, content_types=['text'], state=UserInfoState.city_area)
 def get_contact(message: Message) -> None:
     # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние diagnosis
     bot.set_state(message.from_user.id, UserInfoState.diagnosis, message.chat.id)
@@ -140,13 +145,14 @@ def get_contact(message: Message) -> None:
 
     time.sleep(0.5)
     bot.send_message(message.from_user.id, f'Опишите самые важные критерии включения/невключения пациента '
-                                           f'в исследование', parse_mode='Markdown',)
+                                           f'в исследование', parse_mode='Markdown', )
     time.sleep(0.5)
     bot.send_message(message.from_user.id, f'В том числе пол/возраст пациента.\n'
-                                           f'Не вдавайтесь в подробности, не нарушайте конфиденциальность', parse_mode='Markdown')
+                                           f'Не вдавайтесь в подробности, не нарушайте конфиденциальность',
+                     parse_mode='Markdown')
 
 
-@bot.message_handler(content_types=['text'], state=UserInfoState.diagnosis)
+@bot.message_handler(func=not_start_help_command, content_types=['text'], state=UserInfoState.diagnosis)
 def get_contact(message: Message) -> None:
     bot.send_message(message.from_user.id,
                      DEFAULT_TEMPLATE_DICT.get('RESEARCH_CONDITION'),
@@ -188,7 +194,6 @@ def get_condition(call) -> None:
         bot.set_state(call.from_user.id, UserInfoState.conditions)
         with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
             data['condition_id'] = DEFAULT_CONDITION_DICT.get(condition)
-
 
         request_body = {
             "dataCollectionId": COLLECTION_RESEARCHES,
@@ -243,7 +248,6 @@ def get_drugs(message: Message) -> None:
             data_ids = json.loads(message.web_app_data.data)
 
             if isinstance(data_ids, list):
-
                 # Обработка полученных данных
                 drugs = ", ".join(data_ids)
                 bot.send_message(message.chat.id, f"Указанные препараты: {drugs}",
@@ -266,31 +270,31 @@ def get_drugs(message: Message) -> None:
             # else:
             #     bot.send_message(message.chat.id, "Вы не выбрали препараты! Попробуйте еще раз")
     except json.JSONDecodeError:
-                logging.error(f"Ошибка при обработке данных из веб-приложения {message.chat.id}")
+        logging.error(f"Ошибка при обработке данных из веб-приложения {message.chat.id}")
     except Exception as e:
-            logging.exception(e)
+        logging.exception(e)
 
-        # elif message.content_type == 'text':
-        #     if len(message.text) > 5:
-        #         # Обработка полученных данных
-        #         drugs = message.text
-        #         bot.send_message(message.chat.id, f"Указанные препараты: {drugs}",
-        #                          reply_markup=types.ReplyKeyboardRemove())
-        #
-        #         # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние drugs
-        #         bot.set_state(message.from_user.id, UserInfoState.drugs, message.chat.id)
-        #         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-        #             data['drugs'] = drugs
-        #
-                # bot.send_message(message.chat.id,
-                #                  f"Для завершения процесса подбора и участия в клинических исследованиях, "
-                #                  f"укажите предпочтительный способ связи:",
-                #                  reply_markup=request_communication())
-        #     else:
-        #         bot.send_message(message.chat.id, "Кажется вы отправили ошибочное название. Попробуйте еще раз",
-        #                          reply_markup=types.ReplyKeyboardRemove())
-        #         bot.send_message(
-        #             message.chat.id,
-        #             "Выберите группу препаратов из списка или введите вручную:",
-        #             reply_markup=request_drugs()
-        #         )
+    # elif message.content_type == 'text':
+    #     if len(message.text) > 5:
+    #         # Обработка полученных данных
+    #         drugs = message.text
+    #         bot.send_message(message.chat.id, f"Указанные препараты: {drugs}",
+    #                          reply_markup=types.ReplyKeyboardRemove())
+    #
+    #         # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние drugs
+    #         bot.set_state(message.from_user.id, UserInfoState.drugs, message.chat.id)
+    #         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+    #             data['drugs'] = drugs
+    #
+    # bot.send_message(message.chat.id,
+    #                  f"Для завершения процесса подбора и участия в клинических исследованиях, "
+    #                  f"укажите предпочтительный способ связи:",
+    #                  reply_markup=request_communication())
+    #     else:
+    #         bot.send_message(message.chat.id, "Кажется вы отправили ошибочное название. Попробуйте еще раз",
+    #                          reply_markup=types.ReplyKeyboardRemove())
+    #         bot.send_message(
+    #             message.chat.id,
+    #             "Выберите группу препаратов из списка или введите вручную:",
+    #             reply_markup=request_drugs()
+    #         )
