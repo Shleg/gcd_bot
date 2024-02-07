@@ -84,8 +84,8 @@ RESEARCH_CRITERIA_DESC = 'researchCriteriaDescription'
 RESEARCH_CONDITION_IDS = 'studyConditionId'
 RESEARCH_PHASE_IDS = 'researchPhaseId'
 RESEARCHES_DRUGS = 'drugGroupId'
-RESEARCHES_DIF_SPEC = 'specializationName'
-RESEARCHES_DIF_CITY = 'cityName'
+RESEARCHES_DIF_SPEC = 'specializationsName'
+RESEARCHES_DIF_CITY = 'citiyName'
 RESEARCHES_DIF_DRUGS = 'drugGroupName'
 # isModerationApproved
 # botUsers-clinicalStudiesIds

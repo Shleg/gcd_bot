@@ -1,16 +1,17 @@
 
-from telebot.types import Message
 from telebot import types
+from telebot.types import Message
 
 from database.config_data import COLLECTION_USERS, USER_TG_NAME, USER_CHAT_ID, USER_DIF_SPEC, USER_DIF_CITY, \
-    COLLECTION_RESEARCHES, RESEARCH_NAME, RESEARCHES_DIF_SPEC, RESEARCHES_DIF_CITY
+    COLLECTION_RESEARCHES, RESEARCH_NAME, RESEARCHES_DIF_SPEC, RESEARCHES_DIF_CITY, RESEARCH_DIAG_NAME, \
+    RESEARCH_CRITERIA_DESC, RESEARCHES_DIF_DRUGS
 from database.data import DEFAULT_TEMPLATE_DICT, save_data_item
 from handlers.custom_handlers.referral import send_next_research, select_researches
 from handlers.default_handlers.start import bot_start
 from keyboards.inline.inline import request_role, request_phase, request_condition
-from keyboards.reply.web_app import request_city, request_specialization, request_area
-from states.user_states import UserInfoState
+from keyboards.reply.web_app import request_city, request_communication
 from loader import bot
+from states.user_states import UserInfoState
 
 
 # Эхо хендлер, куда летят текстовые сообщения без указанного состояния
@@ -40,9 +41,37 @@ def bot_echo(message: Message):
         bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('PHASE_TEXT'), reply_markup=request_phase())
 
     elif state == UserInfoState.phase.name:
-        bot.reply_to(
-            message, "Вы ничего не выбрали!\nВоcпользуйтесь кнопкой ниже для выбора данных"
-        )
+        # bot.reply_to(
+        #     message, "Вы ничего не выбрали!\nВоcпользуйтесь кнопкой ниже для выбора данных"
+        # )
+        with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+            data['user_dif_drugs'] = message.text
+
+        request_body = {
+            "dataCollectionId": COLLECTION_RESEARCHES,
+            "dataItem": {
+                "id": data.get('research_id'),
+                "data": {
+                    "_id": data.get('research_id'),
+                    RESEARCH_NAME: 'NEW RESEARCH',
+                    RESEARCHES_DIF_SPEC: data.get('user_dif_spec'),
+                    RESEARCHES_DIF_CITY: data.get('user_dif_spec'),
+                    RESEARCH_DIAG_NAME: data.get('diagnosis_name'),
+                    RESEARCH_CRITERIA_DESC: data.get('criteria'),
+                    RESEARCHES_DIF_DRUGS: message.text
+                }
+            }
+        }
+
+        save_data_item(request_body)
+
+        bot.set_state(message.from_user.id, UserInfoState.drugs, message.chat.id)
+        bot.send_message(message.chat.id, f"Указанные препараты: {message.text}",
+                         parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
+        bot.send_message(message.chat.id,
+                         DEFAULT_TEMPLATE_DICT.get('REQUEST_COMMUNICATION_TEXT'),
+                         parse_mode='Markdown', reply_markup=request_communication())
+
     elif state == UserInfoState.drugs.name:
         bot.reply_to(
             message, "Вы ничего не выбрали!\nВоcпользуйтесь кнопкой ниже для выбора данных"
@@ -127,16 +156,18 @@ def bot_echo(message: Message):
             save_data_item(request_body)
 
             bot.set_state(message.from_user.id, UserInfoState.city_area, message.chat.id)
+            bot.send_message(message.chat.id, f"Выбранный город: {message.text}",
+                             parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
             bot.send_message(message.chat.id,
                              DEFAULT_TEMPLATE_DICT.get('RESEARCH_DIAGNOSIS'), parse_mode='Markdown')
         else:
 
             select_researches(message)
 
-    elif state in (UserInfoState.city.name, UserInfoState.area.name):
-        bot.reply_to(
-            message, "Вы не выбрали город!\nВоcпользуйтесь кнопкой ниже для выбора города"
-        )
+    # elif state in (UserInfoState.city.name, UserInfoState.area.name):
+    #     bot.reply_to(
+    #         message, "Вы не выбрали город!\nВоcпользуйтесь кнопкой ниже для выбора города"
+    #     )
     elif state == UserInfoState.communication.name:
         bot.reply_to(
             message, "Вы не указали способы связи!\nВоcпользуйтесь кнопкой ниже для выбора способов связи"

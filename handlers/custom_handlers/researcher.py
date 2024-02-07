@@ -1,19 +1,19 @@
 import json
+import logging
 import time
+
+from telebot import types
+from telebot.types import Message
 
 from database.config_data import COLLECTION_USERS, USER_ROLE_IDs, USER_CITY_ID, COLLECTION_RESEARCHES, RESEARCH_NAME, \
     RESEARCH_DOCTOR_ID, RESEARCH_CITY_ID, RESEARCH_DIAG_NAME, RESEARCH_CRITERIA_DESC, RESEARCH_CONDITION_IDS, \
-    RESEARCH_PHASE_IDS, COLLECTION_DRUGS, RESEARCHES_DRUGS
+    RESEARCH_PHASE_IDS, RESEARCHES_DRUGS, RESEARCHES_DIF_SPEC, RESEARCHES_DIF_CITY
 from database.data import DEFAULT_TEMPLATE_DICT, DEFAULT_ROLE_DICT, replace_data_item_reference, DEFAULT_CITY_DICT, \
     save_data_item, DEFAULT_CONDITION_DICT, DEFAULT_PHASES_DICT, DEFAULT_DRUGS_DICT
-from keyboards.reply.web_app import request_area, request_drugs, request_communication
 from keyboards.inline.inline import request_condition, request_phase
+from keyboards.reply.web_app import request_area, request_drugs, request_communication
 from loader import bot
 from states.user_states import UserInfoState
-from telebot.types import Message
-from telebot import types
-
-import logging
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('role:Врач-исследователь'),
@@ -130,6 +130,8 @@ def get_contact(message: Message) -> None:
             "data": {
                 "_id": data.get('research_id'),
                 RESEARCH_NAME: 'NEW RESEARCH',
+                RESEARCHES_DIF_SPEC: data.get('user_dif_spec'),
+                RESEARCHES_DIF_CITY: data.get('user_dif_spec'),
                 RESEARCH_DIAG_NAME: data.get('diagnosis_name')
             }
         }
@@ -162,6 +164,8 @@ def get_contact(message: Message) -> None:
             "data": {
                 "_id": data.get('research_id'),
                 RESEARCH_NAME: 'NEW RESEARCH',
+                RESEARCHES_DIF_SPEC: data.get('user_dif_spec'),
+                RESEARCHES_DIF_CITY: data.get('user_dif_spec'),
                 RESEARCH_DIAG_NAME: data.get('diagnosis_name'),
                 RESEARCH_CRITERIA_DESC: data.get('criteria'),
             }
@@ -224,8 +228,7 @@ def get_condition(call) -> None:
         replace_data_item_reference(request_body)
 
         bot.send_message(
-            call.message.chat.id,
-            "Выберите группу препаратов из списка или введите вручную:",
+            call.message.chat.id, DEFAULT_TEMPLATE_DICT.get('DRUGS_CHOICE_TEXT'),
             parse_mode='Markdown', reply_markup=request_drugs()
         )
 
@@ -243,7 +246,7 @@ def get_drugs(message: Message) -> None:
 
                 # Обработка полученных данных
                 drugs = ", ".join(data_ids)
-                bot.send_message(message.chat.id, f"Выбранные препараты: {drugs}",
+                bot.send_message(message.chat.id, f"Указанные препараты: {drugs}",
                                  parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
                 bot.set_state(message.from_user.id, UserInfoState.drugs, message.chat.id)
                 with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
