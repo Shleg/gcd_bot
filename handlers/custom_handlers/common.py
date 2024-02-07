@@ -241,10 +241,13 @@ def get_contact(message: Message) -> None:
 @bot.message_handler(content_types=['text'], state=UserInfoState.last)
 def get_bot_user_name(message: Message) -> None:
     try:
-        if message.text.isalpha():
+        # Проверка, что текст содержит только буквы, пробелы и, возможно, точку
+        if re.match(r'^[\w\s.]+$', message.text, flags=re.UNICODE):
+            # Удаление точки из текста
+            cleaned_text = message.text.replace('.', '')
 
             with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-                data['name'] = message.text
+                data['name'] = cleaned_text
                 contact_info = data['contact_info']
 
             contact_info_str = '\n'.join(contact_info)
