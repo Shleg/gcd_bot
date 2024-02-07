@@ -6,7 +6,8 @@ from telebot import types
 from telebot.types import Message
 
 from database.config_data import COLLECTION_USERS, USER_SPEC_IDs, USER_PREF_CONTACT, USER_CONTACT_INFO, USER_NAME, \
-    USER_TG_NAME, USER_CHAT_ID, USER_STATE, USER_ROLE_IDs, COLLECTION_RESEARCHES, RESEARCH_SPEC_ID
+    USER_TG_NAME, USER_CHAT_ID, USER_STATE, USER_ROLE_IDs, COLLECTION_RESEARCHES, RESEARCH_SPEC_ID, USER_DIF_SPEC, \
+    RESEARCH_NAME, RESEARCHES_DIF_SPEC
 from database.data import DEFAULT_SPEC_DICT, replace_data_item_reference, save_data_item, DEFAULT_METHODS_DICT, \
     DEFAULT_ROLE_DICT, query_data_items, DEFAULT_TEMPLATE_DICT, get_bots_manager_chat_ids
 from keyboards.reply.web_app import request_telegram, request_city
@@ -33,6 +34,7 @@ def get_specialization(message: Message):
                 bot.set_state(message.from_user.id, UserInfoState.specialization, message.chat.id)
                 with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
                     data['spec'] = data_ids
+                    data['user_dif_spec'] = ''
 
                 request_body = {
                     "dataCollectionId": COLLECTION_USERS,
@@ -41,6 +43,21 @@ def get_specialization(message: Message):
                     "newReferencedItemIds": [DEFAULT_SPEC_DICT.get(spec) for spec in data_ids]
                 }
                 replace_data_item_reference(request_body)
+
+                request_body = {
+                    "dataCollectionId": COLLECTION_USERS,
+                    "dataItem": {
+                        "id": data.get('id'),
+                        "data": {
+                            "_id": data.get('_id'),
+                            USER_TG_NAME: message.from_user.username,
+                            USER_CHAT_ID: message.chat.id,
+                            USER_DIF_SPEC: ''
+                        }
+                    }
+                }
+
+                save_data_item(request_body)
 
                 bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('CITY_REFERAL_TEXT'),
                                  parse_mode='Markdown', reply_markup=request_city())
@@ -63,6 +80,21 @@ def get_specialization(message: Message):
                     "newReferencedItemIds": [DEFAULT_SPEC_DICT.get(spec) for spec in data_ids]
                 }
                 replace_data_item_reference(request_body)
+                # Очистили поле Специализации если оно было вручную
+                request_body = {
+                    "dataCollectionId": COLLECTION_USERS,
+                    "dataItem": {
+                        "id": data.get('id'),
+                        "data": {
+                            "_id": data.get('_id'),
+                            USER_TG_NAME: message.from_user.username,
+                            USER_CHAT_ID: message.chat.id,
+                            USER_DIF_SPEC: ''
+                        }
+                    }
+                }
+
+                save_data_item(request_body)
 
                 request_body = {
                     "dataCollectionId": COLLECTION_RESEARCHES,
@@ -71,6 +103,21 @@ def get_specialization(message: Message):
                     "newReferencedItemIds": [DEFAULT_SPEC_DICT.get(spec) for spec in data_ids]
                 }
                 replace_data_item_reference(request_body)
+
+                # Очистили поле Специализации если оно было вручную
+                request_research = {
+                    "dataCollectionId": COLLECTION_RESEARCHES,
+                    "dataItem": {
+                        "id": data.get('research_id'),
+                        "data": {
+                            "_id": data.get('research_id'),
+                            RESEARCH_NAME: 'NEW RESEARCH',
+                            RESEARCHES_DIF_SPEC: ''
+                        }
+                    }
+                }
+
+                save_data_item(request_research)
 
                 bot.send_message(
                     message.chat.id, DEFAULT_TEMPLATE_DICT.get('CITY_RESEARCHER_TEXT'),

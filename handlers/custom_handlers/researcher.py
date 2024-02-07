@@ -88,6 +88,7 @@ def get_city(message: Message) -> None:
             bot.set_state(message.from_user.id, UserInfoState.city_area, message.chat.id)
             with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
                 data['city'] = data_ids
+                data['user_dif_city'] = ''
 
             request_body = {
                 "dataCollectionId": COLLECTION_USERS,

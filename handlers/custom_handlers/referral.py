@@ -1,9 +1,10 @@
 import json
 import logging
 
-from database.config_data import COLLECTION_USERS, USER_ROLE_IDs, USER_CITY_ID, USER_RESEARCH_IDs
+from database.config_data import COLLECTION_USERS, USER_ROLE_IDs, USER_CITY_ID, USER_RESEARCH_IDs, USER_TG_NAME, \
+    USER_CHAT_ID, USER_DIF_SPEC, USER_DIF_CITY
 from database.data import COLLECTION_RESEARCHES_BODY, DEFAULT_ROLE_DICT, DEFAULT_CITY_DICT, replace_data_item_reference, \
-    DEFAULT_TEMPLATE_DICT
+    DEFAULT_TEMPLATE_DICT, save_data_item
 from database.data import query_full_data_item, get_data_item
 
 
@@ -36,6 +37,7 @@ def callback_handler(call) -> None:
                 with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
                     data['role'] = role
 
+
                 request_body = {
                     "dataCollectionId": COLLECTION_USERS,
                     "referringItemFieldName": USER_ROLE_IDs,
@@ -67,6 +69,7 @@ def get_city(message: Message) -> None:
             bot.set_state(message.from_user.id, UserInfoState.city, message.chat.id)
             with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
                 data['city'] = data_ids
+                data['user_dif_city'] = ''
 
             request_body = {
                 "dataCollectionId": COLLECTION_USERS,
@@ -75,6 +78,23 @@ def get_city(message: Message) -> None:
                 "newReferencedItemIds": [DEFAULT_CITY_DICT.get(city) for city in data_ids]
             }
             replace_data_item_reference(request_body)
+
+
+            request_body = {
+                "dataCollectionId": COLLECTION_USERS,
+                "dataItem": {
+                    "id": data.get('id'),
+                    "data": {
+                        "_id": data.get('_id'),
+                        USER_TG_NAME: message.from_user.username,
+                        USER_CHAT_ID: message.chat.id,
+                        USER_DIF_SPEC: data.get('user_dif_spec', ''),
+                        USER_DIF_CITY: ''
+                    }
+                }
+            }
+
+            save_data_item(request_body)
 
             bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('SELECTING_TEXT'), parse_mode='Markdown')
 
