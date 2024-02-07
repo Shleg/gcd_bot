@@ -76,7 +76,7 @@ def get_data_item(data_collection_id, data_item_id, headers=None):
         data = response.json()
         return data
     else:
-        print(f"Error: {response.status_code}, {response.text}")
+        logging.error(f"Error: {response.status_code}, {response.text}")
 
 
 # Функция готова
