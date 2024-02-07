@@ -46,7 +46,7 @@ def callback_handler(call) -> None:
 
                 bot.send_message(
                     call.message.chat.id, DEFAULT_TEMPLATE_DICT.get('SPEC_TEXT'),
-                    reply_markup=request_specialization()
+                    parse_mode='Markdown', reply_markup=request_specialization()
                 )
     except Exception as e:
         logging.exception(e)
@@ -62,7 +62,7 @@ def get_city(message: Message) -> None:
             # Обработка полученных данных
             cities = ", ".join(data_ids)
             bot.send_message(message.chat.id, f"Выбранный город: {cities}",
-                             reply_markup=types.ReplyKeyboardRemove())
+                             parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
 
             bot.set_state(message.from_user.id, UserInfoState.city, message.chat.id)
             with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
@@ -76,7 +76,7 @@ def get_city(message: Message) -> None:
             }
             replace_data_item_reference(request_body)
 
-            bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('SELECTING_TEXT'))
+            bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('SELECTING_TEXT'), parse_mode='Markdown')
 
             # Устанавливаем новое состояние пользователя
             bot.set_state(message.from_user.id, UserInfoState.city, message.chat.id)
@@ -84,8 +84,8 @@ def get_city(message: Message) -> None:
             # Вызываем следующий обработчик вручную
             select_researches(message)
 
-        else:
-            bot.send_message(message.chat.id, "Вы не выбрали город! Попробуйте еще раз")
+        # else:
+        #     bot.send_message(message.chat.id, "Вы не выбрали город! Попробуйте еще раз")
     except json.JSONDecodeError:
         logging.error(f"Ошибка при обработке данных из веб-приложения, чат-ИД {message.chat.id}")
     except Exception as e:
@@ -164,7 +164,7 @@ def send_next_research(message: Message):
             data['checking_research'] = suitable_research
             doctor_id = f"{suitable_research['data']['researcherDoctorId'][0]['_id']}"
             bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('IS_SELECTED_TEXT').format(suitable_research_name),
-                             reply_markup=request_doctor_contact(doctor_id))
+                             parse_mode='Markdown', reply_markup=request_doctor_contact(doctor_id))
             data['current_research_index'] = index + 1
 
         else:
@@ -192,7 +192,7 @@ def send_next_research(message: Message):
                 bot.send_message(message.chat.id,
                                  DEFAULT_TEMPLATE_DICT.get('REQUEST_COMMUNICATION_TEXT').format(data.get('city'),
                                                                                                 data.get('spec')),
-                                 reply_markup=request_communication())
+                                 parse_mode='Markdown', reply_markup=request_communication())
 
     except Exception as e:
         logging.exception(e)
@@ -218,7 +218,7 @@ def get_doctor_contact(call):
         contact_info_message = f"Исследование: {suitable_research_name}\nИмя врача: {doctor_name}\nКонтактные данные: {doctor_contact}"
         checked_researches.append(checking_research)
         data['checked_researches'] = checked_researches
-        bot.send_message(call.message.chat.id, contact_info_message)
+        bot.send_message(call.message.chat.id, contact_info_message, parse_mode='Markdown')
 
 
     else:

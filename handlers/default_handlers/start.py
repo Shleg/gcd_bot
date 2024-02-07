@@ -14,12 +14,12 @@ from states.user_states import UserInfoState
 @bot.message_handler(commands=["start"])
 def bot_start(message: Message):
     bot.reply_to(message, DEFAULT_TEMPLATE_DICT.get('WELCOME_TEXT_1').format(message.from_user.full_name),
-                 reply_markup=types.ReplyKeyboardRemove())
+                 parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
 
     time.sleep(0.5)
 
     bot.send_message(message.from_user.id,
-                     DEFAULT_TEMPLATE_DICT.get('WELCOME_TEXT_2').format(message.from_user.full_name))
+                     DEFAULT_TEMPLATE_DICT.get('WELCOME_TEXT_2').format(message.from_user.full_name), parse_mode='Markdown')
 
     request_body = {
         "dataCollectionId": COLLECTION_USERS,
@@ -68,8 +68,9 @@ def bot_start(message: Message):
                                  DEFAULT_TEMPLATE_DICT.get('ADMIN_TEXT').format(message.from_user.full_name))
             else:
                 bot.send_message(
-                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('RETURN_TEXT').format(message.from_user.full_name))
-                bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'), reply_markup=request_role())
+                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('RETURN_TEXT').format(message.from_user.full_name), parse_mode='Markdown')
+                bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'),
+                                 parse_mode='Markdown',reply_markup=request_role())
 
             # user_state = string_to_state(data['state'])
             # bot.set_state(message.from_user.id, user_state, message.chat.id)
@@ -97,7 +98,7 @@ def bot_start(message: Message):
             data['tg_name'] = new_user['dataItem']['data']['tgName']
             # data['state'] = bot.get_state(message.from_user.id)
 
-        bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'), reply_markup=request_role())
+        bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'), parse_mode='Markdown', reply_markup=request_role())
 
 # Функция для преобразования строки в состояние
 # def string_to_state(state_str):

@@ -64,7 +64,7 @@ def request_area() -> ReplyKeyboardMarkup:
     keyboard = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=False)
 
     # Создаем кнопку для открытия веб-приложения
-    button = KeyboardButton("Выбрать область исследования", web_app=WebAppInfo(url=web_app_url))
+    button = KeyboardButton("🩺  Выбрать область исследования", web_app=WebAppInfo(url=web_app_url))
 
     # Добавляем кнопку в клавиатуру
     keyboard.add(button)
@@ -83,7 +83,7 @@ def request_drugs() -> ReplyKeyboardMarkup:
     keyboard = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=False)
 
     # Создаем кнопку для открытия веб-приложения
-    button = KeyboardButton("Выбрать препараты", web_app=WebAppInfo(url=web_app_url))
+    button = KeyboardButton("💊  Выбрать препараты", web_app=WebAppInfo(url=web_app_url))
 
     # Добавляем кнопку в клавиатуру
     keyboard.add(button)
@@ -102,7 +102,7 @@ def request_communication() -> ReplyKeyboardMarkup:
     keyboard = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=False)
 
     # Создаем кнопку для открытия веб-приложения
-    button = KeyboardButton("Выбрать способы связи", web_app=WebAppInfo(url=web_app_url))
+    button = KeyboardButton("📟  Выбрать способы связи", web_app=WebAppInfo(url=web_app_url))
 
     # Добавляем кнопку в клавиатуру
     keyboard.add(button)

@@ -28,7 +28,7 @@ def get_specialization(message: Message):
                 # Обработка полученных данных
                 specializations = ", ".join(data_ids)
                 bot.send_message(message.chat.id, f"Ваши специализации: {specializations}",
-                                 reply_markup=types.ReplyKeyboardRemove())
+                                 parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
 
                 bot.set_state(message.from_user.id, UserInfoState.specialization, message.chat.id)
                 with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
@@ -42,13 +42,14 @@ def get_specialization(message: Message):
                 }
                 replace_data_item_reference(request_body)
 
-                bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('CITY_REFERAL_TEXT'), reply_markup=request_city())
+                bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('CITY_REFERAL_TEXT'),
+                                 parse_mode='Markdown', reply_markup=request_city())
 
-            elif button_text == 'Выбрать область исследования':
+            elif button_text == '🩺  Выбрать область исследования':
                 # Обработка полученных данных
                 area = ", ".join(data_ids)
                 bot.send_message(message.chat.id, f"Ваша область исследований: {area}",
-                                 reply_markup=types.ReplyKeyboardRemove())
+                                 parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
 
                 # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние area
                 bot.set_state(message.from_user.id, UserInfoState.area, message.chat.id)
@@ -72,9 +73,10 @@ def get_specialization(message: Message):
                 replace_data_item_reference(request_body)
 
                 bot.send_message(
-                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('CITY_RESEARCHER_TEXT'), reply_markup=request_city())
-        else:
-            bot.send_message(message.chat.id, "Вы ничего не указали! Попробуйте еще раз")
+                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('CITY_RESEARCHER_TEXT'),
+                    parse_mode='Markdown', reply_markup=request_city())
+        # else:
+        #     bot.send_message(message.chat.id, "Вы ничего не указали! Попробуйте еще раз")
     except json.JSONDecodeError:
         logging.error(f"Ошибка при обработке данных из веб-приложения {message.chat.id}")
     except Exception as e:
@@ -90,11 +92,11 @@ def get_communication(message: Message):
         data_ids = json.loads(message.web_app_data.data)
         button_text = message.web_app_data.button_text
         if isinstance(data_ids, list):
-            if button_text == 'Выбрать способы связи':
+            if button_text == '📟  Выбрать способы связи':
                 # Обработка полученных данных
                 comm_methods = ", ".join(data_ids)
                 bot.send_message(message.chat.id, f"Выбранные способы связи: {comm_methods}",
-                                 reply_markup=types.ReplyKeyboardRemove())
+                                 parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
 
                 bot.set_state(message.from_user.id, UserInfoState.communication, message.chat.id)
                 with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
@@ -111,8 +113,8 @@ def get_communication(message: Message):
                 replace_data_item_reference(request_body)
 
                 request_method_contacts(message)
-        else:
-            bot.send_message(message.chat.id, "Вы не указали способы связи! Попробуйте еще раз")
+        # else:
+        #     bot.send_message(message.chat.id, "Вы не указали способы связи! Попробуйте еще раз")
     except json.JSONDecodeError:
         logging.error(f"Ошибка при обработке данных из веб-приложения {message.chat.id}")
     except Exception as e:
@@ -132,19 +134,20 @@ def request_method_contacts(message: Message):
 
             if method == 'Telegram':
                 communication_message = bot.send_message(
-                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('CONTACT_TELEGRAM_TEXT'), reply_markup=request_telegram())
+                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('CONTACT_TELEGRAM_TEXT'),
+                    parse_mode='Markdown', reply_markup=request_telegram())
 
             elif method == 'WhatsApp':
                 communication_message = bot.send_message(
-                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('CONTACT_WHATSAPP_TEXT'))
+                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('CONTACT_WHATSAPP_TEXT'), parse_mode='Markdown',)
 
             elif method == 'Телефон':
                 communication_message = bot.send_message(
-                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('CONTACT_PHONE_TEXT'))
+                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('CONTACT_PHONE_TEXT'), parse_mode='Markdown',)
 
             elif method == 'Почта':
                 communication_message = bot.send_message(
-                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('CONTACT_EMAIL_TEXT'))
+                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('CONTACT_EMAIL_TEXT'), parse_mode='Markdown',)
         else:
 
             bot.set_state(message.from_user.id, UserInfoState.last, message.chat.id)
@@ -168,7 +171,7 @@ def request_method_contacts(message: Message):
 
             save_data_item(request_body)
 
-            bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('COMMUNICATION_MESSAGE'))
+            bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('COMMUNICATION_MESSAGE'), parse_mode='Markdown')
     except Exception as e:
         logging.exception(e)
 
@@ -199,7 +202,7 @@ def get_contact(message: Message) -> None:
                     request_method_contacts(message)
                 else:
                     text = DEFAULT_TEMPLATE_DICT.get('INCORRECT_EMAIL_TEXT')
-                    bot.send_message(message.from_user.id, text)
+                    bot.send_message(message.from_user.id, text, parse_mode='Markdown',)
                     if communication_message:
                         bot.send_message(message.chat.id, communication_message.text)
 
@@ -210,7 +213,7 @@ def get_contact(message: Message) -> None:
                     request_method_contacts(message)
                 else:
                     text = DEFAULT_TEMPLATE_DICT.get('INCORRECT_WHATSAPP_TEXT')
-                    bot.send_message(message.from_user.id, text)
+                    bot.send_message(message.from_user.id, text, parse_mode='Markdown',)
                     if communication_message:
                         bot.send_message(message.chat.id, communication_message.text)
 
@@ -221,12 +224,12 @@ def get_contact(message: Message) -> None:
                     request_method_contacts(message)
                 else:
                     text = DEFAULT_TEMPLATE_DICT.get('INCORRECT_PHONE_TEXT')
-                    bot.send_message(message.from_user.id, text)
+                    bot.send_message(message.from_user.id, text, parse_mode='Markdown',)
                     if communication_message:
                         bot.send_message(message.chat.id, communication_message.text)  # Отправляем предпоследнее сообщение
             else:
                 bot.send_message(message.from_user.id,
-                                 'Кажется вы не нажали кнопку "Поделиться профилем". Попробуйте еще раз')
+                                 'Кажется вы не нажали кнопку "Поделиться профилем". Попробуйте еще раз', parse_mode='Markdown',)
                 if communication_message:
                     bot.send_message(message.chat.id, communication_message.text)
 
@@ -264,7 +267,7 @@ def get_bot_user_name(message: Message) -> None:
                 for chat_id in get_bots_manager_chat_ids():
                     try:
                         bot.send_message(chat_id, DEFAULT_TEMPLATE_DICT.get('NOTICE_TEXT').format(data.get('role'),
-                                                                                                  data.get('tg_name')))
+                                                                                                  data.get('tg_name')), parse_mode='Markdown')
                     except Exception as e:
                         logging.exception(e)
                         # Продолжить выполнение цикла, даже если произошло исключение
@@ -276,7 +279,7 @@ def get_bot_user_name(message: Message) -> None:
 
             if data.get('role') == 'Врач-реферал':
                 if data.get('suitable_research') == 'yes':
-                    bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('ROLE_REFERAL_LAST_RESEARCH_TEXT').format(data["name"]))
+                    bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('ROLE_REFERAL_LAST_RESEARCH_TEXT').format(data["name"]), parse_mode='Markdown')
                 elif data.get('suitable_research') == 'no':
                     city_str = ' ,'.join(data.get('city'))
                     spec_str = ' ,'.join(data.get('spec'))
@@ -284,15 +287,14 @@ def get_bot_user_name(message: Message) -> None:
                     text = DEFAULT_TEMPLATE_DICT.get('ROLE_REFERAL_LAST_NO_RESEARCH_TEXT').format(user_name, city_str, spec_str)
                     bot.send_message(message.from_user.id, text, parse_mode='Markdown')
             else:
-                bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('LAST_TEXT').format(data["name"]))
+                bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('LAST_TEXT').format(data["name"]), parse_mode='Markdown')
 
             bot.set_state(message.from_user.id, UserInfoState.end, message.chat.id)
             time.sleep(1)
-            bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('VACANCY_TEXT').format(data["name"]))
+            bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('VACANCY_TEXT').format(data["name"]), parse_mode='Markdown',)
             # time.sleep(1)
-            # bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('RESUME_TEXT'))
+            # bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('RESUME_TEXT'), parse_mode='Markdown',)
         else:
             bot.send_message(message.from_user.id, "Имя должно состоять только из букв. Попробуйте еще раз!")
     except Exception as e:
         logging.exception(e)
-

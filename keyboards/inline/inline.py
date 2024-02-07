@@ -30,17 +30,18 @@ def request_doctor_contact(doctor_id):
 def submit_request() -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup()
     keyboard.add(
-        InlineKeyboardButton('Да', callback_data='submit:yes'),
-        InlineKeyboardButton('Нет', callback_data='submit:no')
+        InlineKeyboardButton('\U00002705 Да', callback_data='submit:yes'),
+        InlineKeyboardButton('\U0000274C Нет', callback_data='submit:no')
     )
     return keyboard
 
 
 def request_condition() -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup()
-    for condition in list(DEFAULT_CONDITION_DICT.keys())[::-1]:
-        keyboard.add(
-            InlineKeyboardButton(condition, callback_data=f'condition:{condition}')
+    condition = list(DEFAULT_CONDITION_DICT.keys())[::-1]
+    keyboard.add(
+        InlineKeyboardButton(f'\U0001F6CC  {condition[0]}', callback_data=f'condition:{condition}'),
+        InlineKeyboardButton(f'\U0001F6B6  {condition[1]}', callback_data=f'condition:{condition}')
         )
     return keyboard
 

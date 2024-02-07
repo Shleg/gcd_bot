@@ -28,7 +28,7 @@ def callback_handler(call) -> None:
         role = message_data.split(':')[1]  # Получаем роль после префикса
 
         bot.answer_callback_query(call.id)
-        bot.send_message(call.message.chat.id, f"Вы выбрали роль: {role}")
+        bot.send_message(call.message.chat.id, f"Вы выбрали роль: {role}", parse_mode='Markdown',)
 
         # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние role
         bot.set_state(call.from_user.id, UserInfoState.role)
@@ -68,7 +68,7 @@ def callback_handler(call) -> None:
         bot.send_message(
             call.message.chat.id,
             "Выберите, пожалуйста, вашу терапевтическую область исследования...",
-            reply_markup=request_area()
+            parse_mode='Markdown', reply_markup=request_area()
         )
     except Exception as e:
         logging.exception(e)
@@ -83,7 +83,7 @@ def get_city(message: Message) -> None:
             # Обработка полученных данных
             cities = ", ".join(data_ids)
             bot.send_message(message.chat.id, f"Выбранный город: {cities}",
-                             reply_markup=types.ReplyKeyboardRemove())
+                             parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
 
             # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние city_area
             bot.set_state(message.from_user.id, UserInfoState.city_area, message.chat.id)
@@ -107,10 +107,10 @@ def get_city(message: Message) -> None:
             replace_data_item_reference(request_body)
 
             bot.send_message(message.chat.id,
-                             f"Заболевание? (конкретный диагноз)")
+                             f"Заболевание? (конкретный диагноз)", parse_mode='Markdown',)
 
-        else:
-            bot.send_message(message.chat.id, "Вы не выбрали город! Попробуйте еще раз")
+        # else:
+        #     bot.send_message(message.chat.id, "Вы не выбрали город! Попробуйте еще раз")
     except json.JSONDecodeError:
         logging.error(f"Ошибка при обработке данных из веб-приложения {message.chat.id}")
     except Exception as e:
@@ -139,17 +139,17 @@ def get_contact(message: Message) -> None:
 
     time.sleep(0.5)
     bot.send_message(message.from_user.id, f'Опишите самые важные критерии включения/невключения пациента '
-                                           f'в исследование')
+                                           f'в исследование', parse_mode='Markdown',)
     time.sleep(0.5)
     bot.send_message(message.from_user.id, f'В том числе пол/возраст пациента.\n'
-                                           f'Не вдавайтесь в подробности, не нарушайте конфиденциальность')
+                                           f'Не вдавайтесь в подробности, не нарушайте конфиденциальность', parse_mode='Markdown')
 
 
 @bot.message_handler(content_types=['text'], state=UserInfoState.diagnosis)
 def get_contact(message: Message) -> None:
     bot.send_message(message.from_user.id,
                      DEFAULT_TEMPLATE_DICT.get('RESEARCH_CONDITION'),
-                     reply_markup=request_condition()
+                     parse_mode='Markdown', reply_markup=request_condition()
                      )
     # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние criteria
     bot.set_state(message.from_user.id, UserInfoState.criteria, message.chat.id)
@@ -198,7 +198,7 @@ def get_condition(call) -> None:
         bot.send_message(
             call.message.chat.id,
             DEFAULT_TEMPLATE_DICT.get('PHASE_TEXT'),
-            reply_markup=request_phase()
+            parse_mode='Markdown', reply_markup=request_phase()
         )
 
 
@@ -227,7 +227,7 @@ def get_condition(call) -> None:
         bot.send_message(
             call.message.chat.id,
             "Выберите группу препаратов из списка или введите вручную:",
-            reply_markup=request_drugs()
+            parse_mode='Markdown', reply_markup=request_drugs()
         )
 
 
@@ -245,7 +245,7 @@ def get_drugs(message: Message) -> None:
                 # Обработка полученных данных
                 drugs = ", ".join(data_ids)
                 bot.send_message(message.chat.id, f"Выбранные препараты: {drugs}",
-                                 reply_markup=types.ReplyKeyboardRemove())
+                                 parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
                 bot.set_state(message.from_user.id, UserInfoState.drugs, message.chat.id)
                 with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
                     data['drugs'] = data_ids
@@ -260,9 +260,9 @@ def get_drugs(message: Message) -> None:
 
                 bot.send_message(message.chat.id,
                                  DEFAULT_TEMPLATE_DICT.get('REQUEST_COMMUNICATION_TEXT'),
-                                 reply_markup=request_communication())
-            else:
-                bot.send_message(message.chat.id, "Вы не выбрали препараты! Попробуйте еще раз")
+                                 parse_mode='Markdown', reply_markup=request_communication())
+            # else:
+            #     bot.send_message(message.chat.id, "Вы не выбрали препараты! Попробуйте еще раз")
     except json.JSONDecodeError:
                 logging.error(f"Ошибка при обработке данных из веб-приложения {message.chat.id}")
     except Exception as e:

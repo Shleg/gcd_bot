@@ -227,6 +227,7 @@ def get_bots_manager_chat_ids() -> list:
     return manager_bot_chat_ids
 
 
+
 # DEFAULT_ROLE = [role['data']['roleName'] for role in query_data_items(COLLECTION_ROLES_BODY)['dataItems']]
 DEFAULT_ROLE_LIST = [{role['data']['roleName']: role['id']} for role in
                      query_data_items(COLLECTION_ROLES_BODY)['dataItems']]
@@ -266,11 +267,11 @@ DEFAULT_METHODS_LIST = [{method['data']['contactPreferencesName']: method['id']}
                         query_data_items(COLLECTION_METHODS_BODY)['dataItems']]
 DEFAULT_METHODS_DICT = dict((k, v) for d in DEFAULT_METHODS_LIST for k, v in d.items())
 
-DEFAULT_TEMPLATE_LIST = [{template['data']['templateMessageName']: template['data']['templateMessageDescription']} for
+DEFAULT_TEMPLATE_LIST = [{template['data']['templateMessageName']: template['data']['templateMessageDescription']}
+                         for
                          template in query_data_items(COLLECTION_TEMPLATE_BODY)['dataItems']]
 
 DEFAULT_TEMPLATE_DICT = dict((k, v) for d in DEFAULT_TEMPLATE_LIST for k, v in d.items())
-
 
 DEFAULT_CONDITION_LIST = [{cond['data']['studyConditionsName']: cond['id']} for
                           cond in query_data_items(COLLECTION_CONDITION_BODY)['dataItems']]
