@@ -3,7 +3,7 @@ import time
 from telebot import types
 from telebot.types import Message
 
-from database.config_data import COLLECTION_USERS, USER_CHAT_ID, USER_TG_NAME, USER_STATE, USER_ROLE_IDs
+from database.config_data import COLLECTION_USERS, USER_CHAT_ID, USER_TG_NAME, USER_ROLE_IDs
 from database.data import query_data_items, get_data_item, save_data_item, query_referenced_data_items, \
     DEFAULT_TEMPLATE_DICT
 from keyboards.inline.inline import request_role

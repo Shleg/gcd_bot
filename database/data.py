@@ -277,7 +277,7 @@ DEFAULT_CONDITION_LIST = [{cond['data']['studyConditionsName']: cond['id']} for
                           cond in query_data_items(COLLECTION_CONDITION_BODY)['dataItems']]
 
 DEFAULT_CONDITION_DICT = dict((k, v) for d in DEFAULT_CONDITION_LIST for k, v in d.items())
-test = query_data_items(COLLECTION_CONDITION_BODY)['dataItems']
+# test = query_data_items(COLLECTION_CONDITION_BODY)['dataItems']
 # def generate_template_dict():
 #     for template in query_data_items(COLLECTION_TEMPLATE_BODY)['dataItems']:
 #         yield {template['data']['templateMessageName']: template['data']['templateMessageDescription']}
