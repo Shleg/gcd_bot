@@ -97,8 +97,8 @@ def select_researches(message: Message):
         suitable_researches = []
 
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-            cities = data.get('city')
-            specs = data.get('spec')
+            cities = data.get('city') or data.get('user_dif_city')
+            specs = data.get('spec') or data.get('user_dif_spec')
 
         research_list = query_full_data_item(COLLECTION_RESEARCHES_BODY)
         research_city = list()
@@ -142,8 +142,8 @@ def select_researches(message: Message):
 
             replace_data_item_reference(request_body)
 
-            city_str = ' ,'.join(data.get('city'))
-            spec_str = ' ,'.join(data.get('spec'))
+            city_str =data.get('user_dif_city') or ' ,'.join(data.get('city'))
+            spec_str = data.get('user_dif_spec') or ' ,'.join(data.get('spec'))
             bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('NO_SELECTED_TEXT').format(city_str, spec_str),
                              parse_mode='Markdown', reply_markup=request_communication())
     except Exception as e:

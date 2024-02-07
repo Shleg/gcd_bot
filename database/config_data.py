@@ -27,6 +27,8 @@ USER_CONTACT_INFO = 'contactInfo'  # text
 USER_PREF_CONTACT = 'contactPreferencesId'  # reference
 USER_RESEARCH_IDs = 'clinicalStudiesIds'  # multi-reference
 USER_STATE = 'newField'  # multi-reference
+USER_DIF_SPEC = 'specializationName'
+USER_DIF_CITY = 'cityName'
 
 # Описание таблицы Роли пользователей
 COLLECTION_ROLES = 'botUserRoles'
@@ -82,6 +84,9 @@ RESEARCH_CRITERIA_DESC = 'researchCriteriaDescription'
 RESEARCH_CONDITION_IDS = 'studyConditionId'
 RESEARCH_PHASE_IDS = 'researchPhaseId'
 RESEARCHES_DRUGS = 'drugGroupId'
+RESEARCHES_DIF_SPEC = 'specializationName'
+RESEARCHES_DIF_CITY = 'cityName'
+RESEARCHES_DIF_DRUGS = 'drugGroupName'
 # isModerationApproved
 # botUsers-clinicalStudiesIds
 

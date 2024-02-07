@@ -66,8 +66,7 @@ def callback_handler(call) -> None:
         replace_data_item_reference(request_body_users)
 
         bot.send_message(
-            call.message.chat.id,
-            "Выберите, пожалуйста, вашу терапевтическую область исследования...",
+            call.message.chat.id, DEFAULT_TEMPLATE_DICT.get('AREA_TEXT'),
             parse_mode='Markdown', reply_markup=request_area()
         )
     except Exception as e:
@@ -107,7 +106,7 @@ def get_city(message: Message) -> None:
             replace_data_item_reference(request_body)
 
             bot.send_message(message.chat.id,
-                             f"Заболевание? (конкретный диагноз)", parse_mode='Markdown',)
+                             DEFAULT_TEMPLATE_DICT.get('RESEARCH_DIAGNOSIS'), parse_mode='Markdown')
 
         # else:
         #     bot.send_message(message.chat.id, "Вы не выбрали город! Попробуйте еще раз")
