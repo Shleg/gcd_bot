@@ -5,7 +5,7 @@ from telebot.types import Message
 from database.config_data import COLLECTION_USERS, USER_TG_NAME, USER_CHAT_ID, USER_DIF_SPEC, USER_DIF_CITY, \
     COLLECTION_RESEARCHES, RESEARCH_NAME, RESEARCHES_DIF_SPEC, RESEARCHES_DIF_CITY, RESEARCH_DIAG_NAME, \
     RESEARCH_CRITERIA_DESC, RESEARCHES_DIF_DRUGS, USER_ROLE_IDs, USER_SPEC_IDs, RESEARCH_SPEC_ID, USER_CITY_ID, \
-    RESEARCH_CITY_ID
+    RESEARCH_CITY_ID, RESEARCHES_DRUGS
 from database.data import DEFAULT_TEMPLATE_DICT, save_data_item, replace_data_item_reference, DEFAULT_CITY_DICT
 from handlers.custom_handlers.referral import send_next_research, select_researches
 from handlers.default_handlers.start import bot_start
@@ -42,7 +42,7 @@ def bot_echo(message: Message):
                     "_id": data.get('_id'),
                     USER_TG_NAME: message.from_user.username,
                     USER_CHAT_ID: message.chat.id,
-                    USER_DIF_SPEC: message.text
+                    USER_DIF_SPEC: data.get('user_dif_spec', '')
                 }
             }
         }
@@ -83,7 +83,7 @@ def bot_echo(message: Message):
                     "data": {
                         "_id": data.get('research_id'),
                         RESEARCH_NAME: 'NEW RESEARCH',
-                        RESEARCHES_DIF_SPEC: message.text
+                        RESEARCHES_DIF_SPEC: data.get('user_dif_spec', '')
                     }
                 }
             }
@@ -110,7 +110,7 @@ def bot_echo(message: Message):
                     USER_TG_NAME: message.from_user.username,
                     USER_CHAT_ID: message.chat.id,
                     USER_DIF_SPEC: data.get('user_dif_spec', ''),
-                    USER_DIF_CITY: message.text
+                    USER_DIF_CITY: data.get('user_dif_city', ''),
                 }
             }
         }
@@ -134,7 +134,7 @@ def bot_echo(message: Message):
                         "_id": data.get('research_id'),
                         RESEARCH_NAME: 'NEW RESEARCH',
                         RESEARCHES_DIF_SPEC: data.get('user_dif_spec', ''),
-                        RESEARCHES_DIF_CITY: message.text
+                        RESEARCHES_DIF_CITY: data.get('user_dif_city', ''),
                     }
                 }
             }
@@ -174,11 +174,8 @@ def bot_echo(message: Message):
         bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('PHASE_TEXT'), reply_markup=request_phase())
 
     elif state == UserInfoState.phase.name:
-        # bot.reply_to(
-        #     message, "Вы ничего не выбрали!\nВоcпользуйтесь кнопкой ниже для выбора данных"
-        # )
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-            data['user_dif_drugs'] = message.text
+            data['research_dif_drugs'] = message.text
 
         request_body = {
             "dataCollectionId": COLLECTION_RESEARCHES,
@@ -187,16 +184,24 @@ def bot_echo(message: Message):
                 "data": {
                     "_id": data.get('research_id'),
                     RESEARCH_NAME: 'NEW RESEARCH',
-                    RESEARCHES_DIF_SPEC: data.get('user_dif_spec'),
-                    RESEARCHES_DIF_CITY: data.get('user_dif_spec'),
-                    RESEARCH_DIAG_NAME: data.get('diagnosis_name'),
-                    RESEARCH_CRITERIA_DESC: data.get('criteria'),
-                    RESEARCHES_DIF_DRUGS: message.text
+                    RESEARCHES_DIF_SPEC: data.get('user_dif_spec', ''),
+                    RESEARCHES_DIF_CITY: data.get('user_dif_spec', ''),
+                    RESEARCH_DIAG_NAME: data.get('diagnosis_name', ''),
+                    RESEARCH_CRITERIA_DESC: data.get('criteria', ''),
+                    RESEARCHES_DIF_DRUGS: data.get('research_dif_drugs', ''),
                 }
             }
         }
 
         save_data_item(request_body)
+
+        request_body = {
+            "dataCollectionId": COLLECTION_RESEARCHES,
+            "referringItemFieldName": RESEARCHES_DRUGS,
+            "referringItemId": data.get('research_id'),
+            "newReferencedItemIds": []
+        }
+        replace_data_item_reference(request_body)
 
         bot.set_state(message.from_user.id, UserInfoState.drugs, message.chat.id)
         bot.send_message(message.chat.id, f"Указанные препараты: {message.text}",
@@ -207,7 +212,7 @@ def bot_echo(message: Message):
 
     elif state == UserInfoState.drugs.name:
         bot.reply_to(
-            message, "Вы ничего не выбрали!\nВоcпользуйтесь кнопкой ниже для выбора данных"
+            message, "Вы не указали способы связи!\nВоcпользуйтесь кнопкой ниже для выбора способов связи"
         )
 
     elif state == UserInfoState.communication.name:

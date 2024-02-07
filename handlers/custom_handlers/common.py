@@ -7,7 +7,7 @@ from telebot.types import Message
 
 from database.config_data import COLLECTION_USERS, USER_SPEC_IDs, USER_PREF_CONTACT, USER_CONTACT_INFO, USER_NAME, \
     USER_TG_NAME, USER_CHAT_ID, USER_STATE, USER_ROLE_IDs, COLLECTION_RESEARCHES, RESEARCH_SPEC_ID, USER_DIF_SPEC, \
-    RESEARCH_NAME, RESEARCHES_DIF_SPEC
+    RESEARCH_NAME, RESEARCHES_DIF_SPEC, USER_DIF_CITY
 from database.data import DEFAULT_SPEC_DICT, replace_data_item_reference, save_data_item, DEFAULT_METHODS_DICT, \
     DEFAULT_ROLE_DICT, query_data_items, DEFAULT_TEMPLATE_DICT, get_bots_manager_chat_ids
 from keyboards.reply.web_app import request_telegram, request_city
@@ -160,8 +160,7 @@ def get_communication(message: Message):
                 replace_data_item_reference(request_body)
 
                 request_method_contacts(message)
-        # else:
-        #     bot.send_message(message.chat.id, "Вы не указали способы связи! Попробуйте еще раз")
+
     except json.JSONDecodeError:
         logging.error(f"Ошибка при обработке данных из веб-приложения {message.chat.id}")
     except Exception as e:
@@ -198,7 +197,7 @@ def request_method_contacts(message: Message):
 
             bot.set_state(message.from_user.id, UserInfoState.last, message.chat.id)
             with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-                contact_info = data.get('contact_info')
+                contact_info = data.get('contact_info', '')
 
             contact_info_str = '\n'.join(contact_info)
 
@@ -208,13 +207,14 @@ def request_method_contacts(message: Message):
                     "id": data.get('id'),
                     "data": {
                         "_id": data.get('_id'),
-                        USER_CONTACT_INFO: contact_info_str,
                         USER_TG_NAME: message.from_user.username,
-                        USER_CHAT_ID: message.chat.id
+                        USER_CHAT_ID: message.chat.id,
+                        USER_DIF_SPEC: data.get('user_dif_spec', ''),
+                        USER_DIF_CITY: data.get('user_dif_city', ''),
+                        USER_CONTACT_INFO: contact_info_str
                     }
                 }
             }
-
             save_data_item(request_body)
 
             bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('COMMUNICATION_MESSAGE'),
@@ -295,7 +295,7 @@ def get_bot_user_name(message: Message) -> None:
 
             with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
                 data['name'] = cleaned_text
-                contact_info = data['contact_info']
+                contact_info = data.get('contact_info', '')
 
             contact_info_str = '\n'.join(contact_info)
 
@@ -305,10 +305,12 @@ def get_bot_user_name(message: Message) -> None:
                     "id": data.get('id'),
                     "data": {
                         "_id": data.get('_id'),
-                        USER_CONTACT_INFO: contact_info_str,
                         USER_TG_NAME: message.from_user.username,
                         USER_CHAT_ID: message.chat.id,
-                        USER_NAME: data.get('name')
+                        USER_DIF_SPEC: data.get('user_dif_spec', ''),
+                        USER_DIF_CITY: data.get('user_dif_city', ''),
+                        USER_NAME: data.get('name', ''),
+                        USER_CONTACT_INFO: contact_info_str
                     }
                 }
             }

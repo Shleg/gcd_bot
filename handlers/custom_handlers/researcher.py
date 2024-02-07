@@ -7,7 +7,8 @@ from telebot.types import Message
 
 from database.config_data import COLLECTION_USERS, USER_ROLE_IDs, USER_CITY_ID, COLLECTION_RESEARCHES, RESEARCH_NAME, \
     RESEARCH_DOCTOR_ID, RESEARCH_CITY_ID, RESEARCH_DIAG_NAME, RESEARCH_CRITERIA_DESC, RESEARCH_CONDITION_IDS, \
-    RESEARCH_PHASE_IDS, RESEARCHES_DRUGS, RESEARCHES_DIF_SPEC, RESEARCHES_DIF_CITY
+    RESEARCH_PHASE_IDS, RESEARCHES_DRUGS, RESEARCHES_DIF_SPEC, RESEARCHES_DIF_CITY, USER_TG_NAME, USER_CHAT_ID, \
+    USER_DIF_SPEC, USER_DIF_CITY, RESEARCHES_DIF_DRUGS
 from database.data import DEFAULT_TEMPLATE_DICT, DEFAULT_ROLE_DICT, replace_data_item_reference, DEFAULT_CITY_DICT, \
     save_data_item, DEFAULT_CONDITION_DICT, DEFAULT_PHASES_DICT, DEFAULT_DRUGS_DICT
 from keyboards.inline.inline import request_condition, request_phase
@@ -106,6 +107,37 @@ def get_city(message: Message) -> None:
             }
             replace_data_item_reference(request_body)
 
+            request_body = {
+                "dataCollectionId": COLLECTION_USERS,
+                "dataItem": {
+                    "id": data.get('id'),
+                    "data": {
+                        "_id": data.get('_id'),
+                        USER_TG_NAME: message.from_user.username,
+                        USER_CHAT_ID: message.chat.id,
+                        USER_DIF_SPEC: data.get('user_dif_spec', ''),
+                        USER_DIF_CITY: data.get('user_dif_city', '')
+                    }
+                }
+            }
+
+            save_data_item(request_body)
+
+            request_body = {
+                "dataCollectionId": COLLECTION_RESEARCHES,
+                "dataItem": {
+                    "id": data.get('research_id'),
+                    "data": {
+                        "_id": data.get('research_id'),
+                        RESEARCH_NAME: 'NEW RESEARCH',
+                        RESEARCHES_DIF_SPEC: data.get('user_dif_spec', ''),
+                        RESEARCHES_DIF_CITY: data.get('user_dif_city', '')
+                    }
+                }
+            }
+
+            save_data_item(request_body)
+
             bot.send_message(message.chat.id,
                              DEFAULT_TEMPLATE_DICT.get('RESEARCH_DIAGNOSIS'), parse_mode='Markdown')
 
@@ -136,9 +168,9 @@ def get_contact(message: Message) -> None:
             "data": {
                 "_id": data.get('research_id'),
                 RESEARCH_NAME: 'NEW RESEARCH',
-                RESEARCHES_DIF_SPEC: data.get('user_dif_spec'),
-                RESEARCHES_DIF_CITY: data.get('user_dif_spec'),
-                RESEARCH_DIAG_NAME: data.get('diagnosis_name')
+                RESEARCHES_DIF_SPEC: data.get('user_dif_spec', ''),
+                RESEARCHES_DIF_CITY: data.get('user_dif_spec', ''),
+                RESEARCH_DIAG_NAME: data.get('diagnosis_name', '')
             }
         }
     }
@@ -155,10 +187,6 @@ def get_contact(message: Message) -> None:
 
 @bot.message_handler(func=not_start_help_command, content_types=['text'], state=UserInfoState.diagnosis)
 def get_contact(message: Message) -> None:
-    bot.send_message(message.from_user.id,
-                     DEFAULT_TEMPLATE_DICT.get('RESEARCH_CONDITION'),
-                     parse_mode='Markdown', reply_markup=request_condition()
-                     )
     # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние criteria
     bot.set_state(message.from_user.id, UserInfoState.criteria, message.chat.id)
     with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
@@ -171,15 +199,20 @@ def get_contact(message: Message) -> None:
             "data": {
                 "_id": data.get('research_id'),
                 RESEARCH_NAME: 'NEW RESEARCH',
-                RESEARCHES_DIF_SPEC: data.get('user_dif_spec'),
-                RESEARCHES_DIF_CITY: data.get('user_dif_spec'),
-                RESEARCH_DIAG_NAME: data.get('diagnosis_name'),
-                RESEARCH_CRITERIA_DESC: data.get('criteria'),
+                RESEARCHES_DIF_SPEC: data.get('user_dif_spec', ''),
+                RESEARCHES_DIF_CITY: data.get('user_dif_spec', ''),
+                RESEARCH_DIAG_NAME: data.get('diagnosis_name', ''),
+                RESEARCH_CRITERIA_DESC: data.get('criteria', ''),
             }
         }
     }
 
     save_data_item(request_body)
+
+    bot.send_message(message.from_user.id,
+                     DEFAULT_TEMPLATE_DICT.get('RESEARCH_CONDITION'),
+                     parse_mode='Markdown', reply_markup=request_condition()
+                     )
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('condition:'), state=UserInfoState.criteria)
@@ -256,6 +289,7 @@ def get_drugs(message: Message) -> None:
                 bot.set_state(message.from_user.id, UserInfoState.drugs, message.chat.id)
                 with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
                     data['drugs'] = data_ids
+                    data['research_dif_drugs'] = ''
 
                 request_body = {
                     "dataCollectionId": COLLECTION_RESEARCHES,
@@ -264,6 +298,24 @@ def get_drugs(message: Message) -> None:
                     "newReferencedItemIds": [DEFAULT_DRUGS_DICT.get(drug) for drug in data_ids]
                 }
                 replace_data_item_reference(request_body)
+
+                request_body = {
+                    "dataCollectionId": COLLECTION_RESEARCHES,
+                    "dataItem": {
+                        "id": data.get('research_id'),
+                        "data": {
+                            "_id": data.get('research_id'),
+                            RESEARCH_NAME: 'NEW RESEARCH',
+                            RESEARCHES_DIF_SPEC: data.get('user_dif_spec', ''),
+                            RESEARCHES_DIF_CITY: data.get('user_dif_spec', ''),
+                            RESEARCH_DIAG_NAME: data.get('diagnosis_name', ''),
+                            RESEARCH_CRITERIA_DESC: data.get('criteria', ''),
+                            RESEARCHES_DIF_DRUGS: data.get('research_dif_drugs', ''),
+                        }
+                    }
+                }
+
+                save_data_item(request_body)
 
                 bot.send_message(message.chat.id,
                                  DEFAULT_TEMPLATE_DICT.get('REQUEST_COMMUNICATION_TEXT'),

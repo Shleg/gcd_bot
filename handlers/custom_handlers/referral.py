@@ -7,7 +7,6 @@ from database.data import COLLECTION_RESEARCHES_BODY, DEFAULT_ROLE_DICT, DEFAULT
     DEFAULT_TEMPLATE_DICT, save_data_item
 from database.data import query_full_data_item, get_data_item
 
-
 from keyboards.reply.web_app import request_specialization, request_communication
 from keyboards.inline.inline import request_doctor_contact
 
@@ -37,7 +36,6 @@ def callback_handler(call) -> None:
                 with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
                     data['role'] = role
 
-
                 request_body = {
                     "dataCollectionId": COLLECTION_USERS,
                     "referringItemFieldName": USER_ROLE_IDs,
@@ -60,7 +58,6 @@ def get_city(message: Message) -> None:
         # Пытаемся десериализовать данные из JSON
         data_ids = json.loads(message.web_app_data.data)
         if isinstance(data_ids, list):
-
             # Обработка полученных данных
             cities = ", ".join(data_ids)
             bot.send_message(message.chat.id, f"Выбранный город: {cities}",
@@ -79,7 +76,6 @@ def get_city(message: Message) -> None:
             }
             replace_data_item_reference(request_body)
 
-
             request_body = {
                 "dataCollectionId": COLLECTION_USERS,
                 "dataItem": {
@@ -89,7 +85,7 @@ def get_city(message: Message) -> None:
                         USER_TG_NAME: message.from_user.username,
                         USER_CHAT_ID: message.chat.id,
                         USER_DIF_SPEC: data.get('user_dif_spec', ''),
-                        USER_DIF_CITY: ''
+                        USER_DIF_CITY: data.get('user_dif_city', ''),
                     }
                 }
             }
@@ -127,7 +123,8 @@ def select_researches(message: Message):
 
             if research['data']['citiyId'] and research['data']['specializationsId']:
                 research_city = [city.get('cityName', None) for city in research['data']['citiyId'] if city]
-                research_spec = [spec.get('specializationName', None) for spec in research['data']['specializationsId'] if spec]
+                research_spec = [spec.get('specializationName', None) for spec in research['data']['specializationsId']
+                                 if spec]
 
                 if set(research_city) & set(cities) and set(research_spec) & set(specs):
                     suitable_researches.append(research)
@@ -143,7 +140,6 @@ def select_researches(message: Message):
             with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
                 data['state'] = 'clinic_research'
                 data['suitable_research'] = 'yes'
-
 
             send_next_research(message)
 
@@ -162,7 +158,7 @@ def select_researches(message: Message):
 
             replace_data_item_reference(request_body)
 
-            city_str =data.get('user_dif_city') or ' ,'.join(data.get('city'))
+            city_str = data.get('user_dif_city') or ' ,'.join(data.get('city'))
             spec_str = data.get('user_dif_spec') or ' ,'.join(data.get('spec'))
             bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('NO_SELECTED_TEXT').format(city_str, spec_str),
                              parse_mode='Markdown', reply_markup=request_communication())
@@ -183,7 +179,8 @@ def send_next_research(message: Message):
             suitable_research_name = suitable_research['data']['clinicalStudiesName']
             data['checking_research'] = suitable_research
             doctor_id = f"{suitable_research['data']['researcherDoctorId'][0]['_id']}"
-            bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('IS_SELECTED_TEXT').format(suitable_research_name),
+            bot.send_message(message.chat.id,
+                             DEFAULT_TEMPLATE_DICT.get('IS_SELECTED_TEXT').format(suitable_research_name),
                              parse_mode='Markdown', reply_markup=request_doctor_contact(doctor_id))
             data['current_research_index'] = index + 1
 
@@ -216,7 +213,6 @@ def send_next_research(message: Message):
 
     except Exception as e:
         logging.exception(e)
-
 
 
 # Функция-обработчик для получения контактной информации о враче

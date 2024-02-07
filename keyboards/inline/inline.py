@@ -40,8 +40,8 @@ def request_condition() -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup()
     condition = list(DEFAULT_CONDITION_DICT.keys())[::-1]
     keyboard.add(
-        InlineKeyboardButton(f'\U0001F6CC  {condition[0]}', callback_data=f'condition:{condition}'),
-        InlineKeyboardButton(f'\U0001F6B6  {condition[1]}', callback_data=f'condition:{condition}')
+        InlineKeyboardButton(f'\U0001F6CC  {condition[0]}', callback_data=f'condition:{condition[0]}'),
+        InlineKeyboardButton(f'\U0001F6B6  {condition[1]}', callback_data=f'condition:{condition[1]}')
         )
     return keyboard
 
