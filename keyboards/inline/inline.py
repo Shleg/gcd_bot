@@ -30,7 +30,6 @@ def request_specialization(specializations, selected_specializations) -> InlineK
         button_text = f"✅ {specialization}" if is_selected else specialization
         button = InlineKeyboardButton(button_text, callback_data=specialization)
         buttons_list.append(button)
-        # keyboard.add(button)
 
     for i in range(2, len(buttons_list), 2):
         keyboard.add(*buttons_list[i:i + 2])
@@ -41,6 +40,29 @@ def request_specialization(specializations, selected_specializations) -> InlineK
 
     return keyboard
 
+
+def request_city(cities, selected_cities) -> InlineKeyboardMarkup:
+    keyboard = InlineKeyboardMarkup(row_width=2)
+    buttons_list = []
+
+    for city in cities:
+        # Получаем текущее состояние выбора специализации
+        is_selected = selected_cities.get(city)
+
+        # Создаем кнопку для каждой специализации с зеленой галочкой, если выбрана
+        button_text = f"✅ {city}" if is_selected else city
+        button = InlineKeyboardButton(button_text, callback_data=city)
+        buttons_list.append(button)
+
+    for i in range(2, len(buttons_list), 2):
+        keyboard.add(*buttons_list[i:i + 2])
+
+        # Добавляем кнопку для подтверждения выбора
+    confirm_button = InlineKeyboardButton("👍 Подтвердить выбор", callback_data="confirm")
+    keyboard.add(confirm_button)
+
+
+    return keyboard
 
 # Функция для создания клавиатуры с кнопкой "Получить контакт врача"
 def request_doctor_contact(doctor_id):

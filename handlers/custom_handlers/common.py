@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 import time
 
@@ -6,133 +7,18 @@ from telebot import types
 from telebot.types import Message
 
 from database.config_data import COLLECTION_USERS, USER_SPEC_IDs, USER_PREF_CONTACT, USER_CONTACT_INFO, USER_NAME, \
-    USER_TG_NAME, USER_CHAT_ID, USER_STATE, USER_ROLE_IDs, COLLECTION_RESEARCHES, RESEARCH_SPEC_ID, USER_DIF_SPEC, \
+    USER_TG_NAME, USER_CHAT_ID, COLLECTION_RESEARCHES, RESEARCH_SPEC_ID, USER_DIF_SPEC, \
     RESEARCH_NAME, RESEARCHES_DIF_SPEC, USER_DIF_CITY
 from database.data import DEFAULT_SPEC_DICT, replace_data_item_reference, save_data_item, DEFAULT_METHODS_DICT, \
-    DEFAULT_ROLE_DICT, query_data_items, DEFAULT_TEMPLATE_DICT, get_bots_manager_chat_ids
-from keyboards.inline.inline import request_specialization
-from keyboards.reply.web_app import request_telegram, request_city
+    DEFAULT_TEMPLATE_DICT, get_bots_manager_chat_ids
+from keyboards.inline.inline import request_specialization, request_city
+from keyboards.reply.web_app import request_telegram
 from loader import bot
 from states.user_states import UserInfoState
-import logging
-
-from utils.functions import get_specs_list_from_wix, clean_selected_specs, get_specs_list_name_from_wix, \
-    get_default_template_dict_from_wix
+from utils.functions import clean_selected_specs, get_specs_list_name_from_wix, \
+    get_default_template_dict_from_wix, clean_selected_cities, get_cities_list_name_from_wix
 
 communication_message = None
-
-# @bot.message_handler(content_types=['web_app_data'], state=UserInfoState.role)
-# def get_specialization(message: Message):
-#     try:
-#         # Пытаемся десериализовать данные из JSON
-#         data_ids = json.loads(message.web_app_data.data)
-#         button_text = message.web_app_data.button_text
-#         if isinstance(data_ids, list):
-#             if button_text == '🩺  Выбрать специализации':
-#                 # Обработка полученных данных
-#                 specializations = ", ".join(data_ids)
-#                 bot.send_message(message.chat.id, f"Ваши специализации: {specializations}",
-#                                  parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
-#
-#                 bot.set_state(message.from_user.id, UserInfoState.specialization, message.chat.id)
-#                 with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-#                     data['spec'] = data_ids
-#                     data['user_dif_spec'] = ''
-#
-#                 request_body = {
-#                     "dataCollectionId": COLLECTION_USERS,
-#                     "referringItemFieldName": USER_SPEC_IDs,
-#                     "referringItemId": data.get('id'),
-#                     "newReferencedItemIds": [DEFAULT_SPEC_DICT.get(spec) for spec in data_ids]
-#                 }
-#                 replace_data_item_reference(request_body)
-#
-#                 request_body = {
-#                     "dataCollectionId": COLLECTION_USERS,
-#                     "dataItem": {
-#                         "id": data.get('id'),
-#                         "data": {
-#                             "_id": data.get('_id'),
-#                             USER_TG_NAME: message.from_user.username,
-#                             USER_CHAT_ID: message.chat.id,
-#                             USER_DIF_SPEC: ''
-#                         }
-#                     }
-#                 }
-#
-#                 save_data_item(request_body)
-#
-#                 bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('CITY_REFERAL_TEXT'),
-#                                  parse_mode='Markdown', reply_markup=request_city())
-#
-#             elif button_text == '🩺  Выбрать область исследования':
-#                 # Обработка полученных данных
-#                 area = ", ".join(data_ids)
-#                 bot.send_message(message.chat.id, f"Ваша область исследований: {area}",
-#                                  parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
-#
-#                 # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние area
-#                 bot.set_state(message.from_user.id, UserInfoState.area, message.chat.id)
-#                 with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-#                     data['area'] = data_ids
-#
-#                 request_body = {
-#                     "dataCollectionId": COLLECTION_USERS,
-#                     "referringItemFieldName": USER_SPEC_IDs,
-#                     "referringItemId": data.get('id'),
-#                     "newReferencedItemIds": [DEFAULT_SPEC_DICT.get(spec) for spec in data_ids]
-#                 }
-#                 replace_data_item_reference(request_body)
-#                 # Очистили поле Специализации если оно было вручную
-#                 request_body = {
-#                     "dataCollectionId": COLLECTION_USERS,
-#                     "dataItem": {
-#                         "id": data.get('id'),
-#                         "data": {
-#                             "_id": data.get('_id'),
-#                             USER_TG_NAME: message.from_user.username,
-#                             USER_CHAT_ID: message.chat.id,
-#                             USER_DIF_SPEC: ''
-#                         }
-#                     }
-#                 }
-#
-#                 save_data_item(request_body)
-#
-#                 request_body = {
-#                     "dataCollectionId": COLLECTION_RESEARCHES,
-#                     "referringItemFieldName": RESEARCH_SPEC_ID,
-#                     "referringItemId": data.get('research_id'),
-#                     "newReferencedItemIds": [DEFAULT_SPEC_DICT.get(spec) for spec in data_ids]
-#                 }
-#                 replace_data_item_reference(request_body)
-#
-#                 # Очистили поле Специализации если оно было вручную
-#                 request_research = {
-#                     "dataCollectionId": COLLECTION_RESEARCHES,
-#                     "dataItem": {
-#                         "id": data.get('research_id'),
-#                         "data": {
-#                             "_id": data.get('research_id'),
-#                             RESEARCH_NAME: 'NEW RESEARCH',
-#                             RESEARCHES_DIF_SPEC: ''
-#                         }
-#                     }
-#                 }
-#
-#                 save_data_item(request_research)
-#
-#                 bot.send_message(
-#                     message.chat.id, DEFAULT_TEMPLATE_DICT.get('CITY_RESEARCHER_TEXT'),
-#                     parse_mode='Markdown', reply_markup=request_city())
-#         # else:
-#         #     bot.send_message(message.chat.id, "Вы ничего не указали! Попробуйте еще раз")
-#     except json.JSONDecodeError:
-#         logging.error(f"Ошибка при обработке данных из веб-приложения {message.chat.id}")
-#     except Exception as e:
-#         logging.exception(e)
-
-
 
 selected_specializations = clean_selected_specs()
 
@@ -179,7 +65,6 @@ def get_specialization(call):
                     data['spec'] = selected_specializations_list
                     data['user_dif_spec'] = ''
 
-
                 request_body = {
                     "dataCollectionId": COLLECTION_USERS,
                     "referringItemFieldName": USER_SPEC_IDs,
@@ -204,7 +89,7 @@ def get_specialization(call):
                 save_data_item(request_body)
 
                 bot.send_message(call.message.chat.id, DEFAULT_TEMPLATE_DICT.get('CITY_REFERAL_TEXT'),
-                                 parse_mode='Markdown', reply_markup=request_city())
+                                 parse_mode='Markdown', reply_markup=request_city(get_cities_list_name_from_wix(), clean_selected_cities()))
 
 
             elif role == 'Врач-исследователь':
@@ -219,7 +104,6 @@ def get_specialization(call):
                     data['area'] = selected_specializations_list
                     data['spec'] = selected_specializations_list
                     data['user_dif_spec'] = ''
-
 
                 request_body = {
                     "dataCollectionId": COLLECTION_USERS,
@@ -268,8 +152,9 @@ def get_specialization(call):
                 save_data_item(request_research)
 
                 bot.send_message(
-                    call.message.chat.id, DEFAULT_TEMPLATE_DICT.get('CITY_RESEARCHER_TEXT'),
-                    parse_mode='Markdown', reply_markup=request_city())
+                    call.message.chat.id, get_default_template_dict_from_wix('CITY_RESEARCHER_TEXT'),
+                    parse_mode='Markdown', reply_markup=request_city(get_cities_list_name_from_wix(), clean_selected_cities())
+                )
 
             # Инициализация словаря для отслеживания выбранных специализаций
             selected_specializations = clean_selected_specs()
@@ -284,7 +169,7 @@ def get_specialization(call):
 
             bot.send_message(
                 call.message.chat.id, get_default_template_dict_from_wix('SPEC_TEXT'),
-                parse_mode='Markdown', reply_markup=request_specialization()
+                parse_mode='Markdown', reply_markup=request_specialization(get_specs_list_name_from_wix(), clean_selected_specs())
             )
 
     except Exception as e:
