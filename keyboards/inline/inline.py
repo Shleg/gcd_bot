@@ -7,6 +7,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
 from database.data import DEFAULT_PHASES_DICT, DEFAULT_CONDITION_DICT, DEFAULT_SPEC_DICT
 from database.config_data import BOT_FORM
+from utils.functions import clean_selected_specs, get_specs_list_from_wix
 
 
 # Функция для создания inline клавиатуры выбора роли
@@ -17,15 +18,9 @@ def request_role() -> InlineKeyboardMarkup:
     return keyboard
 
 
-# Список специализаций
-specializations = list(DEFAULT_SPEC_DICT.keys())
-
-# Инициализация словаря для отслеживания выбранных специализаций
-selected_specializations = {spec: False for spec in specializations}
-
-
-def request_specialization() -> InlineKeyboardMarkup:
+def request_specialization(specializations, selected_specializations) -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup(row_width=2)
+    buttons_list = []
 
     for specialization in specializations:
         # Получаем текущее состояние выбора специализации
@@ -34,7 +29,11 @@ def request_specialization() -> InlineKeyboardMarkup:
         # Создаем кнопку для каждой специализации с зеленой галочкой, если выбрана
         button_text = f"✅ {specialization}" if is_selected else specialization
         button = InlineKeyboardButton(button_text, callback_data=specialization)
-        keyboard.add(button)
+        buttons_list.append(button)
+        # keyboard.add(button)
+
+    for i in range(2, len(buttons_list), 2):
+        keyboard.add(*buttons_list[i:i + 2])
 
     # Добавляем кнопку для подтверждения выбора
     confirm_button = InlineKeyboardButton("Подтвердить выбор", callback_data="confirm")

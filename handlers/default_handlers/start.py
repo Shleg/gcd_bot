@@ -6,22 +6,22 @@ from telebot.types import Message
 from database.config_data import COLLECTION_USERS, USER_CHAT_ID, USER_TG_NAME, USER_ROLE_IDs
 from database.data import query_data_items, get_data_item, save_data_item, query_referenced_data_items, \
     DEFAULT_TEMPLATE_DICT
-from keyboards.inline.inline import request_role, specializations, selected_specializations
+from keyboards.inline.inline import request_role
 from loader import bot
 from states.user_states import UserInfoState
+from utils.functions import clean_selected_specs, get_default_template_dict_from_wix
 
 
 @bot.message_handler(commands=["start"])
 def bot_start(message: Message):
-    nonlocal selected_specializations
-
-    bot.reply_to(message, DEFAULT_TEMPLATE_DICT.get('WELCOME_TEXT_1').format(message.from_user.full_name),
+    bot.reply_to(message, get_default_template_dict_from_wix('WELCOME_TEXT_1').format(message.from_user.full_name),
                  parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
 
     time.sleep(0.5)
 
     bot.send_message(message.from_user.id,
-                     DEFAULT_TEMPLATE_DICT.get('WELCOME_TEXT_2').format(message.from_user.full_name), parse_mode='Markdown')
+                     get_default_template_dict_from_wix('WELCOME_TEXT_2').format(message.from_user.full_name),
+                     parse_mode='Markdown')
 
     request_body = {
         "dataCollectionId": COLLECTION_USERS,
@@ -58,10 +58,8 @@ def bot_start(message: Message):
                 data['user_dif_city'] = ''
                 data['spec'] = ''
                 data['city'] = ''
+                data['selected_specializations'] = False
                 # data['state'] = user['dataItem']['data'].get('newField')
-
-            # Инициализация словаря для отслеживания выбранных специализаций
-            selected_specializations = {spec: False for spec in specializations}
 
             request_body = {
                 "dataCollectionId": COLLECTION_USERS,
@@ -69,21 +67,19 @@ def bot_start(message: Message):
                 "referringItemId": data.get('id')
             }
 
-            data['roles'] = [role.get('dataItem', {}).get('data', {}).get('roleName', None) for role
-                             in query_referenced_data_items(request_body)['results']]
+            while not data.get('roles'):
+                data['roles'] = [role.get('dataItem', {}).get('data', {}).get('roleName', None) for role
+                                 in query_referenced_data_items(request_body)['results']]
 
             if 'Менеджер бота' in data.get('roles'):
                 bot.send_message(message.chat.id,
                                  DEFAULT_TEMPLATE_DICT.get('ADMIN_TEXT').format(message.from_user.full_name))
             else:
                 bot.send_message(
-                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('RETURN_TEXT').format(message.from_user.full_name), parse_mode='Markdown')
+                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('RETURN_TEXT').format(message.from_user.full_name),
+                    parse_mode='Markdown')
                 bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'),
-                                 parse_mode='Markdown',reply_markup=request_role())
-
-            # user_state = string_to_state(data['state'])
-            # bot.set_state(message.from_user.id, user_state, message.chat.id)
-            # process_user_state(message.from_user.id, message, user_state)
+                                 parse_mode='Markdown', reply_markup=request_role())
 
     else:
 
@@ -107,87 +103,7 @@ def bot_start(message: Message):
             data['tg_name'] = new_user['dataItem']['data']['tgName']
             data['user_dif_spec'] = ''
             data['user_dif_city'] = ''
+            data['selected_specializations'] = False
 
-            # data['state'] = bot.get_state(message.from_user.id)
-
-        bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'), parse_mode='Markdown', reply_markup=request_role())
-
-# Функция для преобразования строки в состояние
-# def string_to_state(state_str):
-#     if state_str == 'role':
-#         return UserInfoState.role
-#     elif state_str == 'specialization':
-#         return UserInfoState.specialization
-#     elif state_str == 'city':
-#         return UserInfoState.city
-#     elif state_str == 'clinic_research':
-#         return UserInfoState.clinic_research
-#     elif state_str == 'no_clinic_research':
-#         return UserInfoState.no_clinic_research
-#     elif state_str == 'send_request':
-#         return UserInfoState.send_request
-#     elif state_str == 'area':
-#         return UserInfoState.area
-#     elif state_str == 'city_area':
-#         return UserInfoState.city_area
-#     elif state_str == 'diagnosis':
-#         return UserInfoState.diagnosis
-#     elif state_str == 'criteria':
-#         return UserInfoState.criteria
-#     elif state_str == 'conditions':
-#         return UserInfoState.conditions
-#     elif state_str == 'phase':
-#         return UserInfoState.phase
-#     elif state_str == 'drugs':
-#         return UserInfoState.drugs
-#     elif state_str == 'communication':
-#         return UserInfoState.communication
-#     elif state_str == 'last':
-#         return UserInfoState.last
-#     else:
-#         return None
-
-
-# Основная функция, которая определяет, что делать на основе состояния пользователя
-# def process_user_state(user_id, message, user_state):
-#
-#     if user_state == UserInfoState.role:
-#         bot.send_message(
-#             message.from_user.id,
-#             "Выберите, пожалуйста, вашу специализацию...",
-#             reply_markup=request_specialization()
-#         )
-#     elif user_state == 'specialization':
-#         bot.send_message(
-#             message.chat.id,
-#             "Хорошо! Теперь укажите город, в котором вы ищете клиническое исследование?",
-#             reply_markup=request_city()
-#         )
-#     elif user_state == 'city':
-#         return UserInfoState.city
-#     elif user_state == 'clinic_research':
-#         return UserInfoState.clinic_research
-#     elif user_state == 'no_clinic_research':
-#         return UserInfoState.no_clinic_research
-#     elif user_state == 'send_request':
-#         return UserInfoState.send_request
-#     elif user_state == 'area':
-#         return UserInfoState.area
-#     elif user_state == 'city_area':
-#         return UserInfoState.city_area
-#     elif user_state == 'diagnosis':
-#         return UserInfoState.diagnosis
-#     elif user_state == 'criteria':
-#         return UserInfoState.criteria
-#     elif user_state == 'conditions':
-#         return UserInfoState.conditions
-#     elif user_state == 'phase':
-#         return UserInfoState.phase
-#     elif user_state == 'drugs':
-#         return UserInfoState.drugs
-#     elif user_state == 'communication':
-#         return UserInfoState.communication
-#     elif user_state == 'last':
-#         return UserInfoState.last
-#     else:
-#         return None
+        bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'), parse_mode='Markdown',
+                         reply_markup=request_role())

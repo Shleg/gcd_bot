@@ -10,14 +10,15 @@ from database.config_data import COLLECTION_USERS, USER_SPEC_IDs, USER_PREF_CONT
     RESEARCH_NAME, RESEARCHES_DIF_SPEC, USER_DIF_CITY
 from database.data import DEFAULT_SPEC_DICT, replace_data_item_reference, save_data_item, DEFAULT_METHODS_DICT, \
     DEFAULT_ROLE_DICT, query_data_items, DEFAULT_TEMPLATE_DICT, get_bots_manager_chat_ids
-from keyboards.inline.inline import selected_specializations, request_specialization, specializations
+from keyboards.inline.inline import request_specialization
 from keyboards.reply.web_app import request_telegram, request_city
 from loader import bot
 from states.user_states import UserInfoState
 import logging
 
-communication_message = None
+from utils.functions import get_specs_list_from_wix, clean_selected_specs, get_specs_list_name_from_wix
 
+communication_message = None
 
 # @bot.message_handler(content_types=['web_app_data'], state=UserInfoState.role)
 # def get_specialization(message: Message):
@@ -131,29 +132,41 @@ communication_message = None
 #         logging.exception(e)
 
 
+
+selected_specializations = clean_selected_specs()
+
+
 @bot.callback_query_handler(func=lambda call: True, state=UserInfoState.role)
 def get_specialization(call):
     try:
         global selected_specializations
+        # Список специализаций
+        specializations = get_specs_list_name_from_wix()
+
         specialization = call.data
 
         with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
             role = data.get('role')
+            if not data.get('selected_specializations'):
+                selected_specializations = clean_selected_specs()
 
         if specialization in specializations:
             # Обработка выбора/отмены выбора специализации
             selected_specializations[specialization] = not selected_specializations.get(specialization)
 
+            data['selected_specializations'] = True
+
             # Обновите клавиатуру после изменения выбора
             bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                          reply_markup=request_specialization())
+                                          reply_markup=request_specialization(specializations,
+                                                                              selected_specializations))
 
         elif 'confirm' in specialization and any(map(bool, selected_specializations.values())):
             bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                           reply_markup=None)
             # Обработка подтверждения выбора
-            selected_specializations_list = [spec for spec, is_selected in selected_specializations.items() if is_selected]
-
+            selected_specializations_list = [spec for spec, is_selected in selected_specializations.items() if
+                                             is_selected]
 
             # Добавить сохранение данных из предыдущего обработчика
             if role == 'Врач-реферал':
@@ -162,8 +175,9 @@ def get_specialization(call):
 
                 bot.set_state(call.from_user.id, UserInfoState.specialization, call.message.chat.id)
                 with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
-                                    data['spec'] = selected_specializations_list
-                                    data['user_dif_spec'] = ''
+                    data['spec'] = selected_specializations_list
+                    data['user_dif_spec'] = ''
+
 
                 request_body = {
                     "dataCollectionId": COLLECTION_USERS,
@@ -204,6 +218,7 @@ def get_specialization(call):
                     data['area'] = selected_specializations_list
                     data['spec'] = selected_specializations_list
                     data['user_dif_spec'] = ''
+
 
                 request_body = {
                     "dataCollectionId": COLLECTION_USERS,
@@ -256,7 +271,8 @@ def get_specialization(call):
                     parse_mode='Markdown', reply_markup=request_city())
 
             # Инициализация словаря для отслеживания выбранных специализаций
-            selected_specializations = {spec: False for spec in specializations}
+            selected_specializations = clean_selected_specs()
+            selected_specializations_list.clear()
 
         else:
 
@@ -269,10 +285,6 @@ def get_specialization(call):
                 call.message.chat.id, DEFAULT_TEMPLATE_DICT.get('SPEC_TEXT'),
                 parse_mode='Markdown', reply_markup=request_specialization()
             )
-
-
-
-
 
         # # Отправьте подтверждение обработки callback'а
         # bot.answer_callback_query(call.id, text="Обработано")

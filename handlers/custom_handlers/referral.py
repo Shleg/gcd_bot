@@ -8,12 +8,14 @@ from database.data import COLLECTION_RESEARCHES_BODY, DEFAULT_ROLE_DICT, DEFAULT
 from database.data import query_full_data_item, get_data_item
 
 from keyboards.reply.web_app import request_communication
-from keyboards.inline.inline import request_doctor_contact, request_specialization, selected_specializations, specializations
+from keyboards.inline.inline import request_doctor_contact, request_specialization
 
 from loader import bot
 from states.user_states import UserInfoState
 from telebot.types import Message
 from telebot import types
+
+from utils.functions import clean_selected_specs, get_specs_list_from_wix, get_specs_list_name_from_wix
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('role:Врач-реферал'), state=UserInfoState.initial)
@@ -46,7 +48,7 @@ def callback_handler(call) -> None:
 
                 bot.send_message(
                     call.message.chat.id, DEFAULT_TEMPLATE_DICT.get('SPEC_TEXT'),
-                    parse_mode='Markdown', reply_markup=request_specialization()
+                    parse_mode='Markdown', reply_markup=request_specialization(get_specs_list_name_from_wix(), clean_selected_specs())
                 )
     except Exception as e:
         logging.exception(e)
