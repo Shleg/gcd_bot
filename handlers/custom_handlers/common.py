@@ -10,7 +10,7 @@ from database.config_data import COLLECTION_USERS, USER_SPEC_IDs, USER_PREF_CONT
     RESEARCH_NAME, RESEARCHES_DIF_SPEC, USER_DIF_CITY
 from database.data import DEFAULT_SPEC_DICT, replace_data_item_reference, save_data_item, DEFAULT_METHODS_DICT, \
     DEFAULT_ROLE_DICT, query_data_items, DEFAULT_TEMPLATE_DICT, get_bots_manager_chat_ids
-from keyboards.inline.inline import selected_specializations, request_specialization, specializations, selected_specializations
+from keyboards.inline.inline import selected_specializations, request_specialization, specializations
 from keyboards.reply.web_app import request_telegram, request_city
 from loader import bot
 from states.user_states import UserInfoState
@@ -132,7 +132,7 @@ communication_message = None
 
 
 @bot.callback_query_handler(func=lambda call: True, state=UserInfoState.role)
-def handle_specialization_callback(call):
+def get_specialization(call):
     try:
         global selected_specializations
         specialization = call.data

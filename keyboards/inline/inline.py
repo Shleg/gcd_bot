@@ -16,15 +16,16 @@ def request_role() -> InlineKeyboardMarkup:
     keyboard.add(InlineKeyboardButton('🔬 Врач-исследователь', callback_data='role:Врач-исследователь'))
     return keyboard
 
+
 # Список специализаций
 specializations = list(DEFAULT_SPEC_DICT.keys())
 
 # Инициализация словаря для отслеживания выбранных специализаций
 selected_specializations = {spec: False for spec in specializations}
 
-def request_specialization() -> InlineKeyboardMarkup:
 
-    keyboard = InlineKeyboardMarkup()
+def request_specialization() -> InlineKeyboardMarkup:
+    keyboard = InlineKeyboardMarkup(row_width=2)
 
     for specialization in specializations:
         # Получаем текущее состояние выбора специализации

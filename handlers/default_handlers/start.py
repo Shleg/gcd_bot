@@ -6,13 +6,15 @@ from telebot.types import Message
 from database.config_data import COLLECTION_USERS, USER_CHAT_ID, USER_TG_NAME, USER_ROLE_IDs
 from database.data import query_data_items, get_data_item, save_data_item, query_referenced_data_items, \
     DEFAULT_TEMPLATE_DICT
-from keyboards.inline.inline import request_role
+from keyboards.inline.inline import request_role, specializations, selected_specializations
 from loader import bot
 from states.user_states import UserInfoState
 
 
 @bot.message_handler(commands=["start"])
 def bot_start(message: Message):
+    nonlocal selected_specializations
+
     bot.reply_to(message, DEFAULT_TEMPLATE_DICT.get('WELCOME_TEXT_1').format(message.from_user.full_name),
                  parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
 
@@ -54,7 +56,12 @@ def bot_start(message: Message):
                 data['chat_id'] = user['dataItem']['data']['tgChatId']
                 data['user_dif_spec'] = ''
                 data['user_dif_city'] = ''
+                data['spec'] = ''
+                data['city'] = ''
                 # data['state'] = user['dataItem']['data'].get('newField')
+
+            # Инициализация словаря для отслеживания выбранных специализаций
+            selected_specializations = {spec: False for spec in specializations}
 
             request_body = {
                 "dataCollectionId": COLLECTION_USERS,
