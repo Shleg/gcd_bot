@@ -23,14 +23,14 @@ communication_message = None
 selected_specializations = clean_selected_specs()
 
 
-@bot.callback_query_handler(func=lambda call: True, state=UserInfoState.role)
+@bot.callback_query_handler(func=lambda call: call.data.startswith('spec'), state=UserInfoState.role)
 def get_specialization(call):
     try:
         global selected_specializations
         # Список специализаций
         specializations = get_specs_list_name_from_wix()
 
-        specialization = call.data
+        specialization = call.data.split(':')[1]
 
         with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
             role = data.get('role')
@@ -62,7 +62,7 @@ def get_specialization(call):
 
                 bot.set_state(call.from_user.id, UserInfoState.specialization, call.message.chat.id)
                 with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
-                    data['spec'] = selected_specializations_list
+                    data['spec'] = selected_specializations_list[:]
                     data['user_dif_spec'] = ''
 
                 request_body = {
@@ -88,7 +88,7 @@ def get_specialization(call):
 
                 save_data_item(request_body)
 
-                bot.send_message(call.message.chat.id, DEFAULT_TEMPLATE_DICT.get('CITY_REFERAL_TEXT'),
+                bot.send_message(call.message.chat.id, get_default_template_dict_from_wix('CITY_REFERAL_TEXT'),
                                  parse_mode='Markdown', reply_markup=request_city(get_cities_list_name_from_wix(), clean_selected_cities()))
 
 

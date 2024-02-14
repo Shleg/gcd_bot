@@ -9,10 +9,11 @@ from database.config_data import COLLECTION_USERS, USER_TG_NAME, USER_CHAT_ID, U
 from database.data import DEFAULT_TEMPLATE_DICT, save_data_item, replace_data_item_reference, DEFAULT_CITY_DICT
 from handlers.custom_handlers.referral import send_next_research, select_researches
 from handlers.default_handlers.start import bot_start
-from keyboards.inline.inline import request_role, request_phase, request_condition
-from keyboards.reply.web_app import request_city, request_communication
+from keyboards.inline.inline import request_role, request_phase, request_condition, request_city
+from keyboards.reply.web_app import request_communication
 from loader import bot
 from states.user_states import UserInfoState
+from utils.functions import get_cities_list_name_from_wix, clean_selected_cities
 
 
 # Эхо хендлер, куда летят текстовые сообщения без указанного состояния
@@ -62,7 +63,7 @@ def bot_echo(message: Message):
             bot.send_message(message.chat.id, f"Ваши специализации: {message.text}",
                              parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
             bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('CITY_REFERAL_TEXT'),
-                             parse_mode='Markdown', reply_markup=request_city())
+                             parse_mode='Markdown', reply_markup=request_city(get_cities_list_name_from_wix(), clean_selected_cities()))
             bot.set_state(message.from_user.id, UserInfoState.specialization, message.chat.id)
 
         elif data.get('role') == 'Врач-исследователь':

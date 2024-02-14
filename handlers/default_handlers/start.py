@@ -67,6 +67,7 @@ def bot_start(message: Message):
                     data['spec'] = ''
                     data['city'] = ''
                     data['selected_specializations'] = False
+                    data['selected_cities'] = False
 
                 request_body = {
                     "dataCollectionId": COLLECTION_USERS,
@@ -76,7 +77,7 @@ def bot_start(message: Message):
 
                 while not data.get('user_roles'):
                     data['user_roles'] = [role.get('dataItem', {}).get('data', {}).get('roleName', None) for role
-                                     in query_referenced_data_items(request_body)['results']]
+                                          in query_referenced_data_items(request_body)['results']]
 
                 if 'Менеджер бота' in data.get('user_roles'):
                     bot.send_message(message.chat.id,
@@ -112,8 +113,9 @@ def bot_start(message: Message):
                 data['user_dif_spec'] = ''
                 data['user_dif_city'] = ''
                 data['selected_specializations'] = False
+                data['selected_cities'] = False
 
-            bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'), parse_mode='Markdown',
+            bot.send_message(message.chat.id, get_default_template_dict_from_wix('ROLE_TEXT'), parse_mode='Markdown',
                              reply_markup=request_role())
     except Exception as e:
         logging.exception(e)
