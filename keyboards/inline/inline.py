@@ -5,7 +5,7 @@ import emoji
 from telebot import types
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 
-from database.data import DEFAULT_PHASES_DICT, DEFAULT_CONDITION_DICT
+from database.data import DEFAULT_PHASES_DICT, DEFAULT_CONDITION_DICT, DEFAULT_SPEC_DICT
 from database.config_data import BOT_FORM
 
 
@@ -14,6 +14,31 @@ def request_role() -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup()
     keyboard.add(InlineKeyboardButton('👩‍⚕️ Врач-реферал', callback_data='role:Врач-реферал'))
     keyboard.add(InlineKeyboardButton('🔬 Врач-исследователь', callback_data='role:Врач-исследователь'))
+    return keyboard
+
+# Список специализаций
+specializations = list(DEFAULT_SPEC_DICT.keys())
+
+# Инициализация словаря для отслеживания выбранных специализаций
+selected_specializations = {spec: False for spec in specializations}
+
+def request_specialization() -> InlineKeyboardMarkup:
+
+    keyboard = InlineKeyboardMarkup()
+
+    for specialization in specializations:
+        # Получаем текущее состояние выбора специализации
+        is_selected = selected_specializations.get(specialization)
+
+        # Создаем кнопку для каждой специализации с зеленой галочкой, если выбрана
+        button_text = f"✅ {specialization}" if is_selected else specialization
+        button = InlineKeyboardButton(button_text, callback_data=specialization)
+        keyboard.add(button)
+
+    # Добавляем кнопку для подтверждения выбора
+    confirm_button = InlineKeyboardButton("Подтвердить выбор", callback_data="confirm")
+    keyboard.add(confirm_button)
+
     return keyboard
 
 
@@ -42,7 +67,7 @@ def request_condition() -> InlineKeyboardMarkup:
     keyboard.add(
         InlineKeyboardButton(f'\U0001F6CC  {condition[0]}', callback_data=f'condition:{condition[0]}'),
         InlineKeyboardButton(f'\U0001F6B6  {condition[1]}', callback_data=f'condition:{condition[1]}')
-        )
+    )
     return keyboard
 
 
@@ -53,7 +78,6 @@ def request_phase() -> InlineKeyboardMarkup:
             InlineKeyboardButton(phase, callback_data=f'phase:{phase}')
         )
     return keyboard
-
 
 # def request_communication() -> InlineKeyboardMarkup:
 #     keyboard = InlineKeyboardMarkup()
@@ -66,4 +90,3 @@ def request_phase() -> InlineKeyboardMarkup:
 #         InlineKeyboardButton('Почта', callback_data='comm:Email')
 #     )
 #     return keyboard
-

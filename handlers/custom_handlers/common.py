@@ -10,6 +10,7 @@ from database.config_data import COLLECTION_USERS, USER_SPEC_IDs, USER_PREF_CONT
     RESEARCH_NAME, RESEARCHES_DIF_SPEC, USER_DIF_CITY
 from database.data import DEFAULT_SPEC_DICT, replace_data_item_reference, save_data_item, DEFAULT_METHODS_DICT, \
     DEFAULT_ROLE_DICT, query_data_items, DEFAULT_TEMPLATE_DICT, get_bots_manager_chat_ids
+from keyboards.inline.inline import selected_specializations, request_specialization, specializations, selected_specializations
 from keyboards.reply.web_app import request_telegram, request_city
 from loader import bot
 from states.user_states import UserInfoState
@@ -18,29 +19,157 @@ import logging
 communication_message = None
 
 
-@bot.message_handler(content_types=['web_app_data'], state=UserInfoState.role)
-def get_specialization(message: Message):
-    try:
-        # Пытаемся десериализовать данные из JSON
-        data_ids = json.loads(message.web_app_data.data)
-        button_text = message.web_app_data.button_text
-        if isinstance(data_ids, list):
-            if button_text == '🩺  Выбрать специализации':
-                # Обработка полученных данных
-                specializations = ", ".join(data_ids)
-                bot.send_message(message.chat.id, f"Ваши специализации: {specializations}",
-                                 parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
+# @bot.message_handler(content_types=['web_app_data'], state=UserInfoState.role)
+# def get_specialization(message: Message):
+#     try:
+#         # Пытаемся десериализовать данные из JSON
+#         data_ids = json.loads(message.web_app_data.data)
+#         button_text = message.web_app_data.button_text
+#         if isinstance(data_ids, list):
+#             if button_text == '🩺  Выбрать специализации':
+#                 # Обработка полученных данных
+#                 specializations = ", ".join(data_ids)
+#                 bot.send_message(message.chat.id, f"Ваши специализации: {specializations}",
+#                                  parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
+#
+#                 bot.set_state(message.from_user.id, UserInfoState.specialization, message.chat.id)
+#                 with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+#                     data['spec'] = data_ids
+#                     data['user_dif_spec'] = ''
+#
+#                 request_body = {
+#                     "dataCollectionId": COLLECTION_USERS,
+#                     "referringItemFieldName": USER_SPEC_IDs,
+#                     "referringItemId": data.get('id'),
+#                     "newReferencedItemIds": [DEFAULT_SPEC_DICT.get(spec) for spec in data_ids]
+#                 }
+#                 replace_data_item_reference(request_body)
+#
+#                 request_body = {
+#                     "dataCollectionId": COLLECTION_USERS,
+#                     "dataItem": {
+#                         "id": data.get('id'),
+#                         "data": {
+#                             "_id": data.get('_id'),
+#                             USER_TG_NAME: message.from_user.username,
+#                             USER_CHAT_ID: message.chat.id,
+#                             USER_DIF_SPEC: ''
+#                         }
+#                     }
+#                 }
+#
+#                 save_data_item(request_body)
+#
+#                 bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('CITY_REFERAL_TEXT'),
+#                                  parse_mode='Markdown', reply_markup=request_city())
+#
+#             elif button_text == '🩺  Выбрать область исследования':
+#                 # Обработка полученных данных
+#                 area = ", ".join(data_ids)
+#                 bot.send_message(message.chat.id, f"Ваша область исследований: {area}",
+#                                  parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
+#
+#                 # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние area
+#                 bot.set_state(message.from_user.id, UserInfoState.area, message.chat.id)
+#                 with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+#                     data['area'] = data_ids
+#
+#                 request_body = {
+#                     "dataCollectionId": COLLECTION_USERS,
+#                     "referringItemFieldName": USER_SPEC_IDs,
+#                     "referringItemId": data.get('id'),
+#                     "newReferencedItemIds": [DEFAULT_SPEC_DICT.get(spec) for spec in data_ids]
+#                 }
+#                 replace_data_item_reference(request_body)
+#                 # Очистили поле Специализации если оно было вручную
+#                 request_body = {
+#                     "dataCollectionId": COLLECTION_USERS,
+#                     "dataItem": {
+#                         "id": data.get('id'),
+#                         "data": {
+#                             "_id": data.get('_id'),
+#                             USER_TG_NAME: message.from_user.username,
+#                             USER_CHAT_ID: message.chat.id,
+#                             USER_DIF_SPEC: ''
+#                         }
+#                     }
+#                 }
+#
+#                 save_data_item(request_body)
+#
+#                 request_body = {
+#                     "dataCollectionId": COLLECTION_RESEARCHES,
+#                     "referringItemFieldName": RESEARCH_SPEC_ID,
+#                     "referringItemId": data.get('research_id'),
+#                     "newReferencedItemIds": [DEFAULT_SPEC_DICT.get(spec) for spec in data_ids]
+#                 }
+#                 replace_data_item_reference(request_body)
+#
+#                 # Очистили поле Специализации если оно было вручную
+#                 request_research = {
+#                     "dataCollectionId": COLLECTION_RESEARCHES,
+#                     "dataItem": {
+#                         "id": data.get('research_id'),
+#                         "data": {
+#                             "_id": data.get('research_id'),
+#                             RESEARCH_NAME: 'NEW RESEARCH',
+#                             RESEARCHES_DIF_SPEC: ''
+#                         }
+#                     }
+#                 }
+#
+#                 save_data_item(request_research)
+#
+#                 bot.send_message(
+#                     message.chat.id, DEFAULT_TEMPLATE_DICT.get('CITY_RESEARCHER_TEXT'),
+#                     parse_mode='Markdown', reply_markup=request_city())
+#         # else:
+#         #     bot.send_message(message.chat.id, "Вы ничего не указали! Попробуйте еще раз")
+#     except json.JSONDecodeError:
+#         logging.error(f"Ошибка при обработке данных из веб-приложения {message.chat.id}")
+#     except Exception as e:
+#         logging.exception(e)
 
-                bot.set_state(message.from_user.id, UserInfoState.specialization, message.chat.id)
-                with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-                    data['spec'] = data_ids
-                    data['user_dif_spec'] = ''
+
+@bot.callback_query_handler(func=lambda call: True, state=UserInfoState.role)
+def handle_specialization_callback(call):
+    try:
+        global selected_specializations
+        specialization = call.data
+
+        with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
+            role = data.get('role')
+
+        if specialization in specializations:
+            # Обработка выбора/отмены выбора специализации
+            selected_specializations[specialization] = not selected_specializations.get(specialization)
+
+            # Обновите клавиатуру после изменения выбора
+            bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                          reply_markup=request_specialization())
+
+        elif 'confirm' in specialization and any(map(bool, selected_specializations.values())):
+            bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                          reply_markup=None)
+            # Обработка подтверждения выбора
+            selected_specializations_list = [spec for spec, is_selected in selected_specializations.items() if is_selected]
+
+
+            # Добавить сохранение данных из предыдущего обработчика
+            if role == 'Врач-реферал':
+                bot.send_message(call.message.chat.id,
+                                 f"Выбранные специализации: {', '.join(selected_specializations_list)}")
+
+                bot.set_state(call.from_user.id, UserInfoState.specialization, call.message.chat.id)
+                with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
+                                    data['spec'] = selected_specializations_list
+                                    data['user_dif_spec'] = ''
 
                 request_body = {
                     "dataCollectionId": COLLECTION_USERS,
                     "referringItemFieldName": USER_SPEC_IDs,
                     "referringItemId": data.get('id'),
-                    "newReferencedItemIds": [DEFAULT_SPEC_DICT.get(spec) for spec in data_ids]
+                    "newReferencedItemIds": [DEFAULT_SPEC_DICT.get(spec) for spec in selected_specializations_list]
                 }
                 replace_data_item_reference(request_body)
 
@@ -50,8 +179,8 @@ def get_specialization(message: Message):
                         "id": data.get('id'),
                         "data": {
                             "_id": data.get('_id'),
-                            USER_TG_NAME: message.from_user.username,
-                            USER_CHAT_ID: message.chat.id,
+                            USER_TG_NAME: call.from_user.username,
+                            USER_CHAT_ID: call.message.chat.id,
                             USER_DIF_SPEC: ''
                         }
                     }
@@ -59,25 +188,28 @@ def get_specialization(message: Message):
 
                 save_data_item(request_body)
 
-                bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('CITY_REFERAL_TEXT'),
+                bot.send_message(call.message.chat.id, DEFAULT_TEMPLATE_DICT.get('CITY_REFERAL_TEXT'),
                                  parse_mode='Markdown', reply_markup=request_city())
 
-            elif button_text == '🩺  Выбрать область исследования':
+
+            elif role == 'Врач-исследователь':
                 # Обработка полученных данных
-                area = ", ".join(data_ids)
-                bot.send_message(message.chat.id, f"Ваша область исследований: {area}",
-                                 parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
+                area = ", ".join(selected_specializations_list)
+                bot.send_message(call.message.chat.id, f"Ваша область исследований: {area}",
+                                 parse_mode='Markdown', reply_markup=None)
 
                 # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние area
-                bot.set_state(message.from_user.id, UserInfoState.area, message.chat.id)
-                with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-                    data['area'] = data_ids
+                bot.set_state(call.from_user.id, UserInfoState.area, call.message.chat.id)
+                with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
+                    data['area'] = selected_specializations_list
+                    data['spec'] = selected_specializations_list
+                    data['user_dif_spec'] = ''
 
                 request_body = {
                     "dataCollectionId": COLLECTION_USERS,
                     "referringItemFieldName": USER_SPEC_IDs,
                     "referringItemId": data.get('id'),
-                    "newReferencedItemIds": [DEFAULT_SPEC_DICT.get(spec) for spec in data_ids]
+                    "newReferencedItemIds": [DEFAULT_SPEC_DICT.get(spec) for spec in selected_specializations_list]
                 }
                 replace_data_item_reference(request_body)
                 # Очистили поле Специализации если оно было вручную
@@ -87,8 +219,8 @@ def get_specialization(message: Message):
                         "id": data.get('id'),
                         "data": {
                             "_id": data.get('_id'),
-                            USER_TG_NAME: message.from_user.username,
-                            USER_CHAT_ID: message.chat.id,
+                            USER_TG_NAME: call.from_user.username,
+                            USER_CHAT_ID: call.message.chat.id,
                             USER_DIF_SPEC: ''
                         }
                     }
@@ -100,7 +232,7 @@ def get_specialization(message: Message):
                     "dataCollectionId": COLLECTION_RESEARCHES,
                     "referringItemFieldName": RESEARCH_SPEC_ID,
                     "referringItemId": data.get('research_id'),
-                    "newReferencedItemIds": [DEFAULT_SPEC_DICT.get(spec) for spec in data_ids]
+                    "newReferencedItemIds": [DEFAULT_SPEC_DICT.get(spec) for spec in selected_specializations_list]
                 }
                 replace_data_item_reference(request_body)
 
@@ -120,12 +252,31 @@ def get_specialization(message: Message):
                 save_data_item(request_research)
 
                 bot.send_message(
-                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('CITY_RESEARCHER_TEXT'),
+                    call.message.chat.id, DEFAULT_TEMPLATE_DICT.get('CITY_RESEARCHER_TEXT'),
                     parse_mode='Markdown', reply_markup=request_city())
-        # else:
-        #     bot.send_message(message.chat.id, "Вы ничего не указали! Попробуйте еще раз")
-    except json.JSONDecodeError:
-        logging.error(f"Ошибка при обработке данных из веб-приложения {message.chat.id}")
+
+            # Инициализация словаря для отслеживания выбранных специализаций
+            selected_specializations = {spec: False for spec in specializations}
+
+        else:
+
+            bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                          reply_markup=None)
+            bot.send_message(call.message.chat.id,
+                             f"Вы не указали специализации!!")
+
+            bot.send_message(
+                call.message.chat.id, DEFAULT_TEMPLATE_DICT.get('SPEC_TEXT'),
+                parse_mode='Markdown', reply_markup=request_specialization()
+            )
+
+
+
+
+
+        # # Отправьте подтверждение обработки callback'а
+        # bot.answer_callback_query(call.id, text="Обработано")
+
     except Exception as e:
         logging.exception(e)
 

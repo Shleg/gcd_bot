@@ -7,8 +7,8 @@ from database.data import COLLECTION_RESEARCHES_BODY, DEFAULT_ROLE_DICT, DEFAULT
     DEFAULT_TEMPLATE_DICT, save_data_item
 from database.data import query_full_data_item, get_data_item
 
-from keyboards.reply.web_app import request_specialization, request_communication
-from keyboards.inline.inline import request_doctor_contact
+from keyboards.reply.web_app import request_communication
+from keyboards.inline.inline import request_doctor_contact, request_specialization, selected_specializations, specializations
 
 from loader import bot
 from states.user_states import UserInfoState
