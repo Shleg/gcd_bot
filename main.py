@@ -3,7 +3,7 @@ from loader import bot
 import handlers  # noqa
 from telebot.custom_filters import StateFilter
 from utils.set_bot_commands import set_default_commands
-from utils.logging import setup_logging
+from utils.logging_config import setup_logging
 
 if __name__ == "__main__":
     setup_logging()

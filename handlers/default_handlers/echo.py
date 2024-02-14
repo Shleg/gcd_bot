@@ -28,9 +28,9 @@ def bot_echo(message: Message):
         bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'), reply_markup=request_role())
 
     elif state == UserInfoState.role.name:
-        # bot.reply_to(
-        #     message, "Вы ничего не выбрали!\nВоcпользуйтесь кнопкой ниже для выбора данных"
-        # )
+        # Удаление клавиатуры
+        bot.edit_message_reply_markup(message.chat.id, message.message_id - 1, reply_markup=None)
+
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
             data['user_dif_spec'] = message.text
 

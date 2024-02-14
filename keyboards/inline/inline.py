@@ -36,7 +36,7 @@ def request_specialization(specializations, selected_specializations) -> InlineK
         keyboard.add(*buttons_list[i:i + 2])
 
     # Добавляем кнопку для подтверждения выбора
-    confirm_button = InlineKeyboardButton("Подтвердить выбор", callback_data="confirm")
+    confirm_button = InlineKeyboardButton("👍 Подтвердить выбор", callback_data="confirm")
     keyboard.add(confirm_button)
 
     return keyboard

@@ -16,7 +16,8 @@ from loader import bot
 from states.user_states import UserInfoState
 import logging
 
-from utils.functions import get_specs_list_from_wix, clean_selected_specs, get_specs_list_name_from_wix
+from utils.functions import get_specs_list_from_wix, clean_selected_specs, get_specs_list_name_from_wix, \
+    get_default_template_dict_from_wix
 
 communication_message = None
 
@@ -282,12 +283,9 @@ def get_specialization(call):
                              f"Вы не указали специализации!!")
 
             bot.send_message(
-                call.message.chat.id, DEFAULT_TEMPLATE_DICT.get('SPEC_TEXT'),
+                call.message.chat.id, get_default_template_dict_from_wix('SPEC_TEXT'),
                 parse_mode='Markdown', reply_markup=request_specialization()
             )
-
-        # # Отправьте подтверждение обработки callback'а
-        # bot.answer_callback_query(call.id, text="Обработано")
 
     except Exception as e:
         logging.exception(e)
