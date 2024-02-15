@@ -98,6 +98,8 @@ def bot_echo(message: Message):
             bot.set_state(message.from_user.id, UserInfoState.area, message.chat.id)
 
     elif state in (UserInfoState.specialization.name, UserInfoState.area.name):
+        # Удаление клавиатуры
+        bot.edit_message_reply_markup(message.chat.id, message.message_id - 1, reply_markup=None)
 
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
             data['user_dif_city'] = message.text

@@ -16,6 +16,7 @@ from utils.functions import get_default_template_dict_from_wix
 @bot.message_handler(commands=["start"])
 def bot_start(message: Message):
     try:
+
         bot.reply_to(message, get_default_template_dict_from_wix('WELCOME_TEXT_1').format(message.from_user.full_name),
                      parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
 
@@ -68,6 +69,7 @@ def bot_start(message: Message):
                     data['city'] = ''
                     data['selected_specializations'] = False
                     data['selected_cities'] = False
+                    data['suitable_researches'] = []
 
                 request_body = {
                     "dataCollectionId": COLLECTION_USERS,
@@ -114,6 +116,7 @@ def bot_start(message: Message):
                 data['user_dif_city'] = ''
                 data['selected_specializations'] = False
                 data['selected_cities'] = False
+                data['suitable_researches'] = []
 
             bot.send_message(message.chat.id, get_default_template_dict_from_wix('ROLE_TEXT'), parse_mode='Markdown',
                              reply_markup=request_role())

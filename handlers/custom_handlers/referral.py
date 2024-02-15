@@ -120,7 +120,8 @@ def get_city(call) -> None:
 
             save_data_item(request_body)
 
-            bot.send_message(call.from_user.id, get_default_template_dict_from_wix('SELECTING_TEXT'), parse_mode='Markdown')
+            bot.send_message(call.from_user.id, get_default_template_dict_from_wix('SELECTING_TEXT'),
+                             parse_mode='Markdown')
 
             # Устанавливаем новое состояние пользователя
             bot.set_state(call.from_user.id, UserInfoState.city, call.message.chat.id)
@@ -137,7 +138,8 @@ def get_city(call) -> None:
 
             bot.send_message(
                 call.message.chat.id, get_default_template_dict_from_wix('CITY_REFERAL_TEXT'),
-                parse_mode='Markdown', reply_markup=request_city(get_cities_list_name_from_wix(), clean_selected_cities())
+                parse_mode='Markdown',
+                reply_markup=request_city(get_cities_list_name_from_wix(), clean_selected_cities())
             )
 
     except Exception as e:
@@ -202,7 +204,7 @@ def select_researches(call):
     try:
         suitable_researches = []
 
-        with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
+        with bot.retrieve_data(call.from_user.id) as data:
             cities = data.get('city') or data.get('user_dif_city')
             specs = data.get('spec') or data.get('user_dif_spec')
 
@@ -215,27 +217,26 @@ def select_researches(call):
                 research_city = [city.get('cityName', None) for city in research['data']['citiyId'] if city]
                 research_spec = [spec.get('specializationName', None) for spec in research['data']['specializationsId']
                                  if spec]
-                if research['data']['researcherDoctorId'] and data.get('id') != research['data']['researcherDoctorId'][0]['_id']:
+                if research['data']['researcherDoctorId'] and data.get('id') != \
+                        research['data']['researcherDoctorId'][0]['_id']:
                     if set(research_city) & set(cities) and set(research_spec) & set(specs):
                         suitable_researches.append(research)
 
-        with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
-            data['suitable_researches'] = suitable_researches
-            data['current_research_index'] = 0
+        data['suitable_researches'] = suitable_researches
+        data['current_research_index'] = 0
 
         if suitable_researches:
 
-            bot.set_state(call.from_user.id, UserInfoState.clinic_research, call.message.chat.id)
+            bot.set_state(call.from_user.id, UserInfoState.clinic_research)
 
-            with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
-                data['state'] = 'clinic_research'
-                data['suitable_research'] = 'yes'
+            data['state'] = 'clinic_research'
+            data['suitable_research'] = 'yes'
 
             send_next_research(call)
 
         else:
-            bot.set_state(call.from_user.id, UserInfoState.no_clinic_research, call.message.chat.id)
-            with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
+            bot.set_state(call.from_user.id, UserInfoState.no_clinic_research)
+            with bot.retrieve_data(call.from_user.id) as data:
                 data['state'] = 'no_clinic_research'
                 data['suitable_research'] = 'no'
 
@@ -250,7 +251,8 @@ def select_researches(call):
 
             city_str = data.get('user_dif_city') or ' ,'.join(data.get('city'))
             spec_str = data.get('user_dif_spec') or ' ,'.join(data.get('spec'))
-            bot.send_message(call.message.chat.id, DEFAULT_TEMPLATE_DICT.get('NO_SELECTED_TEXT').format(city_str, spec_str),
+            bot.send_message(call.from_user.id,
+                             DEFAULT_TEMPLATE_DICT.get('NO_SELECTED_TEXT').format(city_str, spec_str),
                              parse_mode='Markdown', reply_markup=request_communication())
     except Exception as e:
         logging.exception(e)
@@ -258,7 +260,7 @@ def select_researches(call):
 
 def send_next_research(call):
     try:
-        with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
+        with bot.retrieve_data(call.from_user.id, call.chat.id) as data:
             suitable_researches = data.get('suitable_researches', [])
             index = data.get('current_research_index', 0)
             state = data.get('state')
