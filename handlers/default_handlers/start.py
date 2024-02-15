@@ -16,6 +16,14 @@ from utils.functions import get_default_template_dict_from_wix
 @bot.message_handler(commands=["start"])
 def bot_start(message: Message):
     try:
+        try:
+            with bot.retrieve_data(message.from_user.id) as data:
+                if data is not None and data.get('message_to_remove', False):
+                    message_to_remove = data.get('message_to_remove')
+                    # Удаление клавиатуры
+                    bot.edit_message_reply_markup(message.chat.id, message_to_remove.message_id, reply_markup=None)
+        except Exception as e:
+            logging.exception(e)
 
         bot.reply_to(message, get_default_template_dict_from_wix('WELCOME_TEXT_1').format(message.from_user.full_name),
                      parse_mode='Markdown', reply_markup=None)
@@ -86,7 +94,7 @@ def bot_start(message: Message):
                     data['contact_info'] = ''
                     data['selected_methods_list'] = []
                     # очистка для обработчика @bot.message_handler(content_types=['text'], state=UserInfoState.last)
-                    data['name'] = ''
+                    data['name'] = user['dataItem']['data']['doctorName']
                     data['communication_message'] = None
 
                 request_body = {
@@ -104,12 +112,19 @@ def bot_start(message: Message):
                                      get_default_template_dict_from_wix('ADMIN_TEXT').format(
                                          message.from_user.full_name))
                 else:
-                    bot.send_message(
-                        message.chat.id,
-                        get_default_template_dict_from_wix('RETURN_TEXT').format(message.from_user.full_name),
-                        parse_mode='Markdown')
-                    data['message_to_remove'] = bot.send_message(message.chat.id, get_default_template_dict_from_wix('ROLE_TEXT'),
-                                     parse_mode='Markdown', reply_markup=request_role())
+                    if data.get('name') != '':
+                        bot.send_message(
+                            message.chat.id,
+                            get_default_template_dict_from_wix('RETURN_TEXT').format(data.get('name')),
+                            parse_mode='Markdown')
+                    else:
+                        bot.send_message(
+                            message.chat.id,
+                            get_default_template_dict_from_wix('RETURN_TEXT').format(message.from_user.full_name),
+                            parse_mode='Markdown')
+                    data['message_to_remove'] = bot.send_message(message.chat.id,
+                                                                 get_default_template_dict_from_wix('ROLE_TEXT'),
+                                                                 parse_mode='Markdown', reply_markup=request_role())
 
         else:
 

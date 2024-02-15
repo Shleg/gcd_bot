@@ -90,7 +90,7 @@ def get_specialization(call):
 
                 save_data_item(request_body)
 
-                bot.send_message(call.message.chat.id, get_default_template_dict_from_wix('CITY_REFERAL_TEXT'),
+                data['message_to_remove'] = bot.send_message(call.message.chat.id, get_default_template_dict_from_wix('CITY_REFERAL_TEXT'),
                                  parse_mode='Markdown',
                                  reply_markup=request_city(get_cities_list_name_from_wix(), clean_selected_cities()))
 
