@@ -252,7 +252,7 @@ def get_criteria(message: Message) -> None:
 
     save_data_item(request_body)
 
-    bot.send_message(message.from_user.id,
+    data['message_to_remove'] = bot.send_message(message.from_user.id,
                      DEFAULT_TEMPLATE_DICT.get('RESEARCH_CONDITION'),
                      parse_mode='Markdown', reply_markup=request_condition()
                      )
@@ -260,12 +260,14 @@ def get_criteria(message: Message) -> None:
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('condition:'), state=UserInfoState.criteria)
 def get_condition(call) -> None:
-    data = call.data
-    if data.startswith('condition:'):
+    call_data = call.data
+    if call_data.startswith('condition:'):
+        with bot.retrieve_data(call.from_user.id) as data:
+            message_to_remove = data['message_to_remove']
         # Удаление клавиатуры
-        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+        bot.edit_message_reply_markup(call.message.chat.id, message_to_remove.message_id, reply_markup=None)
 
-        condition = data.split(':')[1]
+        condition = call_data.split(':')[1]
 
         # Обновляем состояние пользователя и переходим к следующему шагу: устанавливаем состояние conditions
         bot.set_state(call.from_user.id, UserInfoState.conditions)
@@ -280,7 +282,7 @@ def get_condition(call) -> None:
         }
         replace_data_item_reference(request_body)
 
-        bot.send_message(
+        data['message_to_remove'] = bot.send_message(
             call.message.chat.id,
             DEFAULT_TEMPLATE_DICT.get('PHASE_TEXT'),
             parse_mode='Markdown', reply_markup=request_phase()
@@ -309,7 +311,7 @@ def get_condition(call) -> None:
         }
         replace_data_item_reference(request_body)
 
-        bot.send_message(
+        data['message_to_remove'] = bot.send_message(
             call.from_user.id, DEFAULT_TEMPLATE_DICT.get('DRUGS_CHOICE_TEXT'),
             parse_mode='Markdown', reply_markup=request_drugs(get_drugs_list_name_from_wix(), clean_selected_drugs())
         )
@@ -381,7 +383,7 @@ def get_drugs(call) -> None:
 
             save_data_item(request_body)
 
-            bot.send_message(call.from_user.id,
+            data['message_to_remove'] = bot.send_message(call.from_user.id,
                              DEFAULT_TEMPLATE_DICT.get('REQUEST_COMMUNICATION_TEXT'),
                              parse_mode='Markdown', reply_markup=request_communication(get_methods_list_name_from_wix(),
                                                                                        clean_selected_methods()))
@@ -393,7 +395,7 @@ def get_drugs(call) -> None:
             bot.send_message(call.message.chat.id,
                              f"Вы не указали препараты!!")
 
-            bot.send_message(
+            data['message_to_remove'] = bot.send_message(
                 call.message.chat.id, get_default_template_dict_from_wix('DRUGS_CHOICE_TEXT'),
                 parse_mode='Markdown',
                 reply_markup=request_drugs(get_drugs_list_name_from_wix(), clean_selected_drugs())

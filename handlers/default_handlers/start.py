@@ -148,6 +148,7 @@ def bot_start(message: Message):
                 data['selected_methods_list'] = []
                 # очистка для обработчика @bot.message_handler(content_types=['text'], state=UserInfoState.last)
                 data['name'] = ''
+                data['communication_message'] = None
 
             data['message_to_remove'] = bot.send_message(message.chat.id, get_default_template_dict_from_wix('ROLE_TEXT'), parse_mode='Markdown',
                              reply_markup=request_role())

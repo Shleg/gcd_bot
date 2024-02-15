@@ -19,8 +19,6 @@ from utils.functions import clean_selected_specs, get_specs_list_name_from_wix, 
     get_default_template_dict_from_wix, clean_selected_cities, get_cities_list_name_from_wix, clean_selected_methods, \
     get_methods_list_name_from_wix
 
-communication_message = None
-
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('spec'), state=UserInfoState.role)
 def get_specialization(call):
@@ -257,7 +255,6 @@ def get_communication(call):
 
 
 def request_method_contacts(call):
-    global communication_message
     try:
         with bot.retrieve_data(call.from_user.id) as data:
             comm_methods = data.get('selected_methods_list')
@@ -267,20 +264,20 @@ def request_method_contacts(call):
             method = comm_methods[index]
 
             if method == 'Telegram':
-                communication_message = bot.send_message(
+                data['communication_message'] = bot.send_message(
                     call.from_user.id, DEFAULT_TEMPLATE_DICT.get('CONTACT_TELEGRAM_TEXT'),
                     parse_mode='Markdown', reply_markup=request_telegram())
 
             elif method == 'WhatsApp':
-                communication_message = bot.send_message(
+                data['communication_message'] = bot.send_message(
                     call.from_user.id, DEFAULT_TEMPLATE_DICT.get('CONTACT_WHATSAPP_TEXT'), parse_mode='Markdown', )
 
             elif method == 'Телефон':
-                communication_message = bot.send_message(
+                data['communication_message'] = bot.send_message(
                     call.from_user.id, DEFAULT_TEMPLATE_DICT.get('CONTACT_PHONE_TEXT'), parse_mode='Markdown', )
 
             elif method == 'Почта':
-                communication_message = bot.send_message(
+                data['communication_message'] = bot.send_message(
                     call.from_user.id, DEFAULT_TEMPLATE_DICT.get('CONTACT_EMAIL_TEXT'), parse_mode='Markdown', )
         else:
 
@@ -314,7 +311,6 @@ def request_method_contacts(call):
 
 @bot.message_handler(content_types=['text', 'contact'], state=UserInfoState.communication)
 def get_contact(message: Message) -> None:
-    global communication_message
     try:
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
             contact_info = data.get('contact_info')
@@ -339,8 +335,8 @@ def get_contact(message: Message) -> None:
                 else:
                     text = DEFAULT_TEMPLATE_DICT.get('INCORRECT_EMAIL_TEXT')
                     bot.send_message(message.from_user.id, text, parse_mode='Markdown', )
-                    if communication_message:
-                        bot.send_message(message.chat.id, communication_message.text)
+                    if data.get('communication_message'):
+                        bot.send_message(message.chat.id, data['communication_message'].text)
 
             elif comm_methods[index] == 'WhatsApp':
                 if re.sub(phone_pattern, '', message.text).isdigit():
@@ -350,8 +346,8 @@ def get_contact(message: Message) -> None:
                 else:
                     text = DEFAULT_TEMPLATE_DICT.get('INCORRECT_WHATSAPP_TEXT')
                     bot.send_message(message.from_user.id, text, parse_mode='Markdown', )
-                    if communication_message:
-                        bot.send_message(message.chat.id, communication_message.text)
+                    if data.get('communication_message'):
+                        bot.send_message(message.chat.id, data['communication_message'].text)
 
             elif comm_methods[index] == 'Телефон':
                 if re.sub(phone_pattern, '', message.text).isdigit():
@@ -361,14 +357,14 @@ def get_contact(message: Message) -> None:
                 else:
                     text = DEFAULT_TEMPLATE_DICT.get('INCORRECT_PHONE_TEXT')
                     bot.send_message(message.from_user.id, text, parse_mode='Markdown', )
-                    if communication_message:
+                    if data.get('communication_message'):
                         bot.send_message(message.chat.id,
-                                         communication_message.text)  # Отправляем предпоследнее сообщение
+                                         data['communication_message'].text)  # Отправляем предпоследнее сообщение
             else:
                 text = DEFAULT_TEMPLATE_DICT.get('INCORRECT_TELEGRAM_TEXT')
                 bot.send_message(message.from_user.id, text, parse_mode='Markdown', )
-                if communication_message:
-                    bot.send_message(message.chat.id, communication_message.text)
+                if data.get('communication_message'):
+                    bot.send_message(message.chat.id, data['communication_message'].text)
 
     except Exception as e:
         logging.exception(e)

@@ -11,7 +11,8 @@ from handlers.default_handlers.start import bot_start
 from keyboards.inline.inline import request_role, request_phase, request_condition, request_city, request_communication
 from loader import bot
 from states.user_states import UserInfoState
-from utils.functions import get_cities_list_name_from_wix, clean_selected_cities
+from utils.functions import get_cities_list_name_from_wix, clean_selected_cities, get_methods_list_name_from_wix, \
+    clean_selected_methods
 
 
 # Эхо хендлер, куда летят текстовые сообщения без указанного состояния
@@ -179,12 +180,16 @@ def bot_echo(message: Message):
 
     elif state == UserInfoState.conditions.name:
         # Удаление клавиатуры
-        bot.edit_message_reply_markup(message.chat.id, message_to_remove, reply_markup=None)
+        bot.edit_message_reply_markup(message.chat.id, message_to_remove.message_id, reply_markup=None)
         bot.reply_to(
             message, "Вы не выбрали фазу исследования!")
         data['message_to_remove'] = bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('PHASE_TEXT'), reply_markup=request_phase())
 
     elif state == UserInfoState.phase.name:
+
+        # Удаление клавиатуры
+        bot.edit_message_reply_markup(message.chat.id, message_to_remove.message_id, reply_markup=None)
+
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
             data['research_dif_drugs'] = message.text
 
@@ -219,11 +224,17 @@ def bot_echo(message: Message):
                          parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
         data['message_to_remove'] = bot.send_message(message.chat.id,
                          DEFAULT_TEMPLATE_DICT.get('REQUEST_COMMUNICATION_TEXT'),
-                         parse_mode='Markdown', reply_markup=request_communication())
+                         parse_mode='Markdown', reply_markup=request_communication(get_methods_list_name_from_wix(), clean_selected_methods()))
 
     elif state == UserInfoState.drugs.name:
+        # Удаление клавиатуры
+        bot.edit_message_reply_markup(message.chat.id, message_to_remove.message_id, reply_markup=None)
         bot.reply_to(
-            message, "Вы не указали способы связи!\nВоcпользуйтесь кнопкой ниже для выбора способов связи"
+            message, "Вы не указали способы связи!\nВоcпользуйтесь кнопками для выбора способов связи"
+        )
+        data['message_to_remove'] = bot.send_message(
+            message.from_user.id, DEFAULT_TEMPLATE_DICT.get('DRUGS_CHOICE_TEXT'),
+            parse_mode='Markdown', reply_markup=request_communication(get_methods_list_name_from_wix(), clean_selected_methods())
         )
 
     elif state == UserInfoState.communication.name:
