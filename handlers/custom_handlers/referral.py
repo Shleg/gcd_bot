@@ -67,7 +67,7 @@ def get_city(call) -> None:
         cities = get_cities_list_name_from_wix()
         city = call.data.split(':')[1]
 
-        with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
+        with bot.retrieve_data(call.from_user.id) as data:
             if not data.get('selected_cities'):
                 selected_cities = clean_selected_cities()
 
@@ -91,7 +91,7 @@ def get_city(call) -> None:
             bot.send_message(call.message.chat.id, f"Выбранный город: {', '.join(selected_cities_list)}",
                              parse_mode='Markdown')
 
-            bot.set_state(call.from_user.id, UserInfoState.city, call.message.chat.id)
+            bot.set_state(call.from_user.id, UserInfoState.city)
             with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
                 data['city'] = selected_cities_list[:]
                 data['user_dif_city'] = ''
@@ -260,7 +260,7 @@ def select_researches(call):
 
 def send_next_research(call):
     try:
-        with bot.retrieve_data(call.from_user.id, call.chat.id) as data:
+        with bot.retrieve_data(call.from_user.id) as data:
             suitable_researches = data.get('suitable_researches', [])
             index = data.get('current_research_index', 0)
             state = data.get('state')

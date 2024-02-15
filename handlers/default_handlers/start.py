@@ -69,7 +69,10 @@ def bot_start(message: Message):
                     data['city'] = ''
                     data['selected_specializations'] = False
                     data['selected_cities'] = False
+                    data['selected_area_cities'] = False
+                    data['selected_drugs'] = False
                     data['suitable_researches'] = []
+                    data['checking_research'] = None
 
                 request_body = {
                     "dataCollectionId": COLLECTION_USERS,
@@ -116,7 +119,10 @@ def bot_start(message: Message):
                 data['user_dif_city'] = ''
                 data['selected_specializations'] = False
                 data['selected_cities'] = False
+                data['selected_area_cities'] = False
+                data['selected_drugs'] = False
                 data['suitable_researches'] = []
+                data['checking_research'] = None
 
             bot.send_message(message.chat.id, get_default_template_dict_from_wix('ROLE_TEXT'), parse_mode='Markdown',
                              reply_markup=request_role())

@@ -1,4 +1,5 @@
-from database.config_data import COLLECTION_SPECS_BODY, COLLECTION_TEMPLATE_BODY, COLLECTION_CITIES_BODY
+from database.config_data import COLLECTION_SPECS_BODY, COLLECTION_TEMPLATE_BODY, COLLECTION_CITIES_BODY, \
+    COLLECTION_DRUGS_BODY
 from database.data import query_data_items
 
 
@@ -44,6 +45,28 @@ def get_cities_dict_from_wix():
 def clean_selected_cities():
     """Получение словаря городов с False вместо значений"""
     return {city: False for city in get_cities_dict_from_wix()}
+
+
+def get_drugs_list_name_from_wix():
+    """Получение списка наименований препаратов"""
+    return [drug['data']['drugGroupsName'] for drug in
+            query_data_items(COLLECTION_DRUGS_BODY)['dataItems']]
+
+
+def get_drugs_list_from_wix():
+    """получение списка словарей препарат: id препарата"""
+    return [{drug['data']['drugGroupsName']: drug['id']} for drug in
+            query_data_items(COLLECTION_DRUGS_BODY)['dataItems']]
+
+
+def get_drugs_dict_from_wix():
+    """Получение словаря препарат: id препарата"""
+    return dict((k, v) for d in get_drugs_list_from_wix() for k, v in d.items())
+
+
+def clean_selected_drugs():
+    """Получение словаря препаратов с False вместо значений"""
+    return {city: False for city in get_drugs_dict_from_wix()}
 
 
 def get_default_template_list_from_wix():
