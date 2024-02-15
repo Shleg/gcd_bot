@@ -28,7 +28,6 @@ def get_specialization(call):
 
         specialization = call.data.split(':')[1]
 
-
         with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
             message_to_remove = data['message_to_remove']
             role = data.get('role')
@@ -45,9 +44,11 @@ def get_specialization(call):
             data['is_selected_specializations'] = True
 
             # Обновите клавиатуру после изменения выбора
-            data['message_to_remove'] = bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
-                                          reply_markup=request_specialization(specializations,
-                                                                              selected_specializations))
+            data['message_to_remove'] = bot.edit_message_reply_markup(chat_id=call.message.chat.id,
+                                                                      message_id=call.message.message_id,
+                                                                      reply_markup=request_specialization(
+                                                                          specializations,
+                                                                          selected_specializations))
 
         elif 'confirm' in specialization and any(map(bool, selected_specializations.values())):
             bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
@@ -159,8 +160,6 @@ def get_specialization(call):
                     reply_markup=request_city(get_cities_list_name_from_wix(), clean_selected_cities())
                 )
 
-            # Инициализация словаря для отслеживания выбранных специализаций
-            selected_specializations = clean_selected_specs()
             selected_specializations_list.clear()
 
         else:

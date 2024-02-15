@@ -66,11 +66,14 @@ def bot_start(message: Message):
                     data['user_dif_spec'] = ''
                     data['user_dif_city'] = ''
                     data['role'] = ''
-                    data['selected_specializations'] = False
+                    data['is_selected_specializations'] = False
+                    data['selected_specializations'] = []
                     data['area'] = None
                     data['spec'] = None
                     data['is_selected_cities'] = False
                     data['selected_cities'] = []
+                    data['is_selected_specializations'] = False
+                    data['selected_specializations'] = []
                     data['is_selected_area_cities'] = False
                     data['selected_area_cities'] = []
                     data['is_selected_drugs'] = False
@@ -84,6 +87,7 @@ def bot_start(message: Message):
                     data['selected_methods_list'] = []
                     # очистка для обработчика @bot.message_handler(content_types=['text'], state=UserInfoState.last)
                     data['name'] = ''
+                    data['communication_message'] = None
 
                 request_body = {
                     "dataCollectionId": COLLECTION_USERS,
@@ -135,6 +139,8 @@ def bot_start(message: Message):
                 data['spec'] = None
                 data['is_selected_cities'] = False
                 data['selected_cities'] = []
+                data['is_selected_specializations'] = False
+                data['selected_specializations'] = []
                 data['is_selected_area_cities'] = False
                 data['selected_area_cities'] = []
                 data['is_selected_drugs'] = False
