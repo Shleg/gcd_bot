@@ -5,8 +5,7 @@ from telebot import types
 from telebot.types import Message
 
 from database.config_data import COLLECTION_USERS, USER_CHAT_ID, USER_TG_NAME, USER_ROLE_IDs
-from database.data import query_data_items, get_data_item, save_data_item, query_referenced_data_items, \
-    DEFAULT_TEMPLATE_DICT
+from database.data import query_data_items, get_data_item, save_data_item, query_referenced_data_items
 from keyboards.inline.inline import request_role
 from loader import bot
 from states.user_states import UserInfoState
@@ -16,22 +15,26 @@ from utils.functions import get_default_template_dict_from_wix
 @bot.message_handler(commands=["start"])
 def bot_start(message: Message):
     try:
+
+        DEFAULT_TEMPLATE_DICT = get_default_template_dict_from_wix()
         try:
             with bot.retrieve_data(message.from_user.id) as data:
                 if data is not None and data.get('message_to_remove', False):
                     message_to_remove = data.get('message_to_remove')
+
                     # Удаление клавиатуры
                     bot.edit_message_reply_markup(message.chat.id, message_to_remove.message_id, reply_markup=None)
         except Exception as e:
             logging.exception(e)
 
-        bot.reply_to(message, get_default_template_dict_from_wix('WELCOME_TEXT_1').format(message.from_user.full_name),
+
+        bot.reply_to(message, DEFAULT_TEMPLATE_DICT.get('WELCOME_TEXT_1').format(message.from_user.full_name),
                      parse_mode='Markdown', reply_markup=None)
 
         time.sleep(0.5)
 
         bot.send_message(message.from_user.id,
-                         get_default_template_dict_from_wix('WELCOME_TEXT_2').format(message.from_user.full_name),
+                         DEFAULT_TEMPLATE_DICT.get('WELCOME_TEXT_2').format(message.from_user.full_name),
                          parse_mode='Markdown')
 
         request_body = {
@@ -94,7 +97,7 @@ def bot_start(message: Message):
                     data['contact_info'] = ''
                     data['selected_methods_list'] = []
                     # очистка для обработчика @bot.message_handler(content_types=['text'], state=UserInfoState.last)
-                    data['name'] = user['dataItem']['data']['doctorName']
+                    data['name'] = data.get('name', '')
                     data['communication_message'] = None
 
                 request_body = {
@@ -109,21 +112,21 @@ def bot_start(message: Message):
 
                 if 'Менеджер бота' in data.get('user_roles'):
                     bot.send_message(message.chat.id,
-                                     get_default_template_dict_from_wix('ADMIN_TEXT').format(
+                                     DEFAULT_TEMPLATE_DICT.get('ADMIN_TEXT').format(
                                          message.from_user.full_name))
                 else:
                     if data.get('name') != '':
                         bot.send_message(
                             message.chat.id,
-                            get_default_template_dict_from_wix('RETURN_TEXT').format(data.get('name')),
+                            DEFAULT_TEMPLATE_DICT.get('RETURN_TEXT').format(data.get('name')),
                             parse_mode='Markdown')
                     else:
                         bot.send_message(
                             message.chat.id,
-                            get_default_template_dict_from_wix('RETURN_TEXT').format(message.from_user.full_name),
+                            DEFAULT_TEMPLATE_DICT.get('RETURN_TEXT').format(message.from_user.full_name),
                             parse_mode='Markdown')
                     data['message_to_remove'] = bot.send_message(message.chat.id,
-                                                                 get_default_template_dict_from_wix('ROLE_TEXT'),
+                                                                 DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'),
                                                                  parse_mode='Markdown', reply_markup=request_role())
 
         else:
@@ -171,7 +174,7 @@ def bot_start(message: Message):
                 data['name'] = ''
                 data['communication_message'] = None
 
-            data['message_to_remove'] = bot.send_message(message.chat.id, get_default_template_dict_from_wix('ROLE_TEXT'), parse_mode='Markdown',
+            data['message_to_remove'] = bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'), parse_mode='Markdown',
                              reply_markup=request_role())
     except Exception as e:
         logging.exception(e)

@@ -9,14 +9,13 @@ from telebot.types import Message
 from database.config_data import COLLECTION_USERS, USER_SPEC_IDs, USER_PREF_CONTACT, USER_CONTACT_INFO, USER_NAME, \
     USER_TG_NAME, USER_CHAT_ID, COLLECTION_RESEARCHES, RESEARCH_SPEC_ID, USER_DIF_SPEC, \
     RESEARCH_NAME, RESEARCHES_DIF_SPEC, USER_DIF_CITY
-from database.data import DEFAULT_SPEC_DICT, replace_data_item_reference, save_data_item, DEFAULT_METHODS_DICT, \
-    DEFAULT_TEMPLATE_DICT, get_bots_manager_chat_ids
+from database.data import (DEFAULT_SPEC_DICT, replace_data_item_reference, save_data_item, DEFAULT_METHODS_DICT,
+                           get_bots_manager_chat_ids, DEFAULT_TEMPLATE_DICT)
 from keyboards.inline.inline import request_specialization, request_city, request_communication
 from keyboards.reply.web_app import request_telegram
 from loader import bot
 from states.user_states import UserInfoState
-from utils.functions import clean_selected_specs, get_specs_list_name_from_wix, \
-    get_default_template_dict_from_wix, clean_selected_cities, get_cities_list_name_from_wix, clean_selected_methods, \
+from utils.functions import clean_selected_specs, get_specs_list_name_from_wix, clean_selected_cities, get_cities_list_name_from_wix, clean_selected_methods, \
     get_methods_list_name_from_wix
 
 
@@ -90,7 +89,7 @@ def get_specialization(call):
 
                 save_data_item(request_body)
 
-                data['message_to_remove'] = bot.send_message(call.message.chat.id, get_default_template_dict_from_wix('CITY_REFERAL_TEXT'),
+                data['message_to_remove'] = bot.send_message(call.message.chat.id, DEFAULT_TEMPLATE_DICT.get('CITY_REFERAL_TEXT'),
                                  parse_mode='Markdown',
                                  reply_markup=request_city(get_cities_list_name_from_wix(), clean_selected_cities()))
 
@@ -155,7 +154,7 @@ def get_specialization(call):
                 save_data_item(request_research)
 
                 data['message_to_remove'] = bot.send_message(
-                    call.message.chat.id, get_default_template_dict_from_wix('CITY_RESEARCHER_TEXT'),
+                    call.message.chat.id, DEFAULT_TEMPLATE_DICT.get('CITY_RESEARCHER_TEXT'),
                     parse_mode='Markdown',
                     reply_markup=request_city(get_cities_list_name_from_wix(), clean_selected_cities())
                 )
@@ -170,7 +169,7 @@ def get_specialization(call):
                              f"Вы не указали специализации!!")
 
             data['message_to_remove'] = bot.send_message(
-                call.message.chat.id, get_default_template_dict_from_wix('SPEC_TEXT'),
+                call.message.chat.id, DEFAULT_TEMPLATE_DICT.get('SPEC_TEXT'),
                 parse_mode='Markdown',
                 reply_markup=request_specialization(get_specs_list_name_from_wix(), clean_selected_specs())
             )
@@ -244,7 +243,7 @@ def get_communication(call):
                              f"Вы не указали способы связи!!")
 
             bot.send_message(
-                call.message.chat.id, get_default_template_dict_from_wix('NO_CONTACT_SELECTED'),
+                call.message.chat.id, DEFAULT_TEMPLATE_DICT.get('NO_CONTACT_SELECTED'),
                 parse_mode='Markdown',
                 reply_markup=request_communication(get_methods_list_name_from_wix(), clean_selected_methods()))
 

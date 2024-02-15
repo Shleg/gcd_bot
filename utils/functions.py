@@ -1,5 +1,5 @@
 from database.config_data import COLLECTION_SPECS_BODY, COLLECTION_TEMPLATE_BODY, COLLECTION_CITIES_BODY, \
-    COLLECTION_DRUGS_BODY, COLLECTION_METHODS_BODY
+    COLLECTION_DRUGS_BODY, COLLECTION_METHODS_BODY, COLLECTION_ROLES_BODY
 from database.data import query_data_items
 
 
@@ -97,6 +97,16 @@ def get_default_template_list_from_wix():
             for template in query_data_items(COLLECTION_TEMPLATE_BODY)['dataItems']]
 
 
-def get_default_template_dict_from_wix(key):
+def get_default_template_dict_from_wix():
     """Получение шаблонного описание по имени шаблона"""
-    return dict((k, v) for d in get_default_template_list_from_wix() for k, v in d.items())[key]
+    return dict((k, v) for d in get_default_template_list_from_wix() for k, v in d.items())
+
+
+def get_default_role_list_from_wix():
+    """Получение списка ролей имя шаблоннного текста: шаблонное описание"""
+    return [{role['data']['roleName']: role['id']} for role in
+                     query_data_items(COLLECTION_ROLES_BODY)['dataItems']]
+
+def get_default_role_dict_from_wix():
+    """Получение шаблонного описание по имени шаблона"""
+    return dict((k, v) for d in get_default_role_list_from_wix() for k, v in d.items())

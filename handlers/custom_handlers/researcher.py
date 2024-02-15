@@ -9,7 +9,7 @@ from database.config_data import COLLECTION_USERS, USER_ROLE_IDs, USER_CITY_ID, 
     RESEARCH_DOCTOR_ID, RESEARCH_CITY_ID, RESEARCH_DIAG_NAME, RESEARCH_CRITERIA_DESC, RESEARCH_CONDITION_IDS, \
     RESEARCH_PHASE_IDS, RESEARCHES_DRUGS, RESEARCHES_DIF_SPEC, RESEARCHES_DIF_CITY, USER_TG_NAME, USER_CHAT_ID, \
     USER_DIF_SPEC, USER_DIF_CITY, RESEARCHES_DIF_DRUGS
-from database.data import DEFAULT_TEMPLATE_DICT, DEFAULT_ROLE_DICT, replace_data_item_reference, DEFAULT_CITY_DICT, \
+from database.data import DEFAULT_TEMPLATE_DICT, replace_data_item_reference, DEFAULT_CITY_DICT, \
     save_data_item, DEFAULT_CONDITION_DICT, DEFAULT_PHASES_DICT, DEFAULT_DRUGS_DICT
 from keyboards.inline.inline import request_condition, request_phase, request_specialization, request_city, \
     request_communication, request_drugs
@@ -17,13 +17,15 @@ from loader import bot
 from states.user_states import UserInfoState
 from utils.functions import get_specs_list_name_from_wix, clean_selected_specs, clean_selected_cities, \
     get_cities_list_name_from_wix, get_default_template_dict_from_wix, clean_selected_drugs, \
-    get_drugs_list_name_from_wix, get_methods_list_name_from_wix, clean_selected_methods
+    get_drugs_list_name_from_wix, get_methods_list_name_from_wix, clean_selected_methods, get_default_role_dict_from_wix
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('role:Врач-исследователь'),
                             state=UserInfoState.initial)
 def callback_handler(call) -> None:
     try:
+        DEFAULT_ROLE_DICT = get_default_role_dict_from_wix()
+
         message_data = call.data
 
         with bot.retrieve_data(call.from_user.id) as data:

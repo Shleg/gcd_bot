@@ -3,7 +3,7 @@ import logging
 
 from database.config_data import COLLECTION_USERS, USER_ROLE_IDs, USER_CITY_ID, USER_RESEARCH_IDs, USER_TG_NAME, \
     USER_CHAT_ID, USER_DIF_SPEC, USER_DIF_CITY
-from database.data import COLLECTION_RESEARCHES_BODY, DEFAULT_ROLE_DICT, DEFAULT_CITY_DICT, replace_data_item_reference, \
+from database.data import COLLECTION_RESEARCHES_BODY, DEFAULT_CITY_DICT, replace_data_item_reference, \
     DEFAULT_TEMPLATE_DICT, save_data_item
 from database.data import query_full_data_item, get_data_item
 
@@ -16,12 +16,14 @@ from telebot import types
 
 from utils.functions import clean_selected_specs, get_specs_list_from_wix, get_specs_list_name_from_wix, \
     clean_selected_cities, get_cities_list_name_from_wix, get_default_template_dict_from_wix, \
-    get_methods_list_name_from_wix, clean_selected_methods
+    get_methods_list_name_from_wix, clean_selected_methods, get_default_role_dict_from_wix
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('role:Врач-реферал'), state=UserInfoState.initial)
 def get_role(call) -> None:
     try:
+        DEFAULT_ROLE_DICT = get_default_role_dict_from_wix()
+
         call_data = call.data
 
         with bot.retrieve_data(call.from_user.id) as data:
@@ -51,7 +53,7 @@ def get_role(call) -> None:
                 replace_data_item_reference(request_body)
 
                 data['message_to_remove'] = bot.send_message(
-                    call.message.chat.id, get_default_template_dict_from_wix('SPEC_TEXT'),
+                    call.message.chat.id, DEFAULT_TEMPLATE_DICT.get('SPEC_TEXT'),
                     parse_mode='Markdown',
                     reply_markup=request_specialization(get_specs_list_name_from_wix(), clean_selected_specs())
                 )
@@ -122,7 +124,7 @@ def get_city(call) -> None:
 
             save_data_item(request_body)
 
-            bot.send_message(call.from_user.id, get_default_template_dict_from_wix('SELECTING_TEXT'),
+            bot.send_message(call.from_user.id, DEFAULT_TEMPLATE_DICT.get('SELECTING_TEXT'),
                              parse_mode='Markdown')
 
             # Устанавливаем новое состояние пользователя
@@ -139,7 +141,7 @@ def get_city(call) -> None:
                              f"Вы не указали город!!")
 
             data['message_to_remove'] = bot.send_message(
-                call.message.chat.id, get_default_template_dict_from_wix('CITY_REFERAL_TEXT'),
+                call.message.chat.id, DEFAULT_TEMPLATE_DICT.get('CITY_REFERAL_TEXT'),
                 parse_mode='Markdown',
                 reply_markup=request_city(get_cities_list_name_from_wix(), clean_selected_cities())
             )
