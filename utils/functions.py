@@ -1,5 +1,5 @@
 from database.config_data import COLLECTION_SPECS_BODY, COLLECTION_TEMPLATE_BODY, COLLECTION_CITIES_BODY, \
-    COLLECTION_DRUGS_BODY
+    COLLECTION_DRUGS_BODY, COLLECTION_METHODS_BODY
 from database.data import query_data_items
 
 
@@ -68,6 +68,28 @@ def clean_selected_drugs():
     """Получение словаря препаратов с False вместо значений"""
     return {city: False for city in get_drugs_dict_from_wix()}
 
+
+
+def get_methods_list_name_from_wix():
+    """Получение списка наименований методов контакты"""
+    return [method['data']['contactPreferencesName'] for method in
+            query_data_items(COLLECTION_METHODS_BODY)['dataItems']]
+
+
+def get_methods_list_from_wix():
+    """получение списка словарей метод: id метода"""
+    return [{method['data']['contactPreferencesName']: method['id']} for method in
+            query_data_items(COLLECTION_METHODS_BODY)['dataItems']]
+
+
+def get_methods_dict_from_wix():
+    """Получение словаря метод: id метода"""
+    return dict((k, v) for d in get_methods_list_from_wix() for k, v in d.items())
+
+
+def clean_selected_methods():
+    """Получение словаря методов с False вместо значений"""
+    return {city: False for city in get_methods_dict_from_wix()}
 
 def get_default_template_list_from_wix():
     """Получение списка словарей имя шаблоннного текста: шаблонное описание"""

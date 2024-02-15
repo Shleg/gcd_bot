@@ -16,35 +16,38 @@ from keyboards.reply.web_app import request_telegram
 from loader import bot
 from states.user_states import UserInfoState
 from utils.functions import clean_selected_specs, get_specs_list_name_from_wix, \
-    get_default_template_dict_from_wix, clean_selected_cities, get_cities_list_name_from_wix
+    get_default_template_dict_from_wix, clean_selected_cities, get_cities_list_name_from_wix, clean_selected_methods, \
+    get_methods_list_name_from_wix
 
 communication_message = None
-
-selected_specializations = clean_selected_specs()
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('spec'), state=UserInfoState.role)
 def get_specialization(call):
     try:
-        global selected_specializations
         # Список специализаций
         specializations = get_specs_list_name_from_wix()
 
         specialization = call.data.split(':')[1]
 
+
         with bot.retrieve_data(call.from_user.id, call.message.chat.id) as data:
+            message_to_remove = data['message_to_remove']
             role = data.get('role')
-            if not data.get('selected_specializations'):
+            if not data.get('is_selected_specializations'):
                 selected_specializations = clean_selected_specs()
+                data['selected_specializations'] = selected_specializations
+            else:
+                selected_specializations = data.get('selected_specializations', {})
 
         if specialization in specializations:
             # Обработка выбора/отмены выбора специализации
             selected_specializations[specialization] = not selected_specializations.get(specialization)
 
-            data['selected_specializations'] = True
+            data['is_selected_specializations'] = True
 
             # Обновите клавиатуру после изменения выбора
-            bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
+            data['message_to_remove'] = bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                           reply_markup=request_specialization(specializations,
                                                                               selected_specializations))
 
@@ -89,7 +92,8 @@ def get_specialization(call):
                 save_data_item(request_body)
 
                 bot.send_message(call.message.chat.id, get_default_template_dict_from_wix('CITY_REFERAL_TEXT'),
-                                 parse_mode='Markdown', reply_markup=request_city(get_cities_list_name_from_wix(), clean_selected_cities()))
+                                 parse_mode='Markdown',
+                                 reply_markup=request_city(get_cities_list_name_from_wix(), clean_selected_cities()))
 
 
             elif role == 'Врач-исследователь':
@@ -151,9 +155,10 @@ def get_specialization(call):
 
                 save_data_item(request_research)
 
-                bot.send_message(
+                data['message_to_remove'] = bot.send_message(
                     call.message.chat.id, get_default_template_dict_from_wix('CITY_RESEARCHER_TEXT'),
-                    parse_mode='Markdown', reply_markup=request_city(get_cities_list_name_from_wix(), clean_selected_cities())
+                    parse_mode='Markdown',
+                    reply_markup=request_city(get_cities_list_name_from_wix(), clean_selected_cities())
                 )
 
             # Инициализация словаря для отслеживания выбранных специализаций
@@ -167,57 +172,95 @@ def get_specialization(call):
             bot.send_message(call.message.chat.id,
                              f"Вы не указали специализации!!")
 
-            bot.send_message(
+            data['message_to_remove'] = bot.send_message(
                 call.message.chat.id, get_default_template_dict_from_wix('SPEC_TEXT'),
-                parse_mode='Markdown', reply_markup=request_specialization(get_specs_list_name_from_wix(), clean_selected_specs())
+                parse_mode='Markdown',
+                reply_markup=request_specialization(get_specs_list_name_from_wix(), clean_selected_specs())
             )
 
     except Exception as e:
         logging.exception(e)
 
 
-@bot.message_handler(content_types=['web_app_data'], state=[UserInfoState.clinic_research,
-                                                            UserInfoState.no_clinic_research,
-                                                            UserInfoState.drugs])
-def get_communication(message: Message):
+# selected_methods = clean_selected_methods()
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith('method'), state=[UserInfoState.clinic_research,
+                                                                                     UserInfoState.no_clinic_research,
+                                                                                     UserInfoState.drugs])
+def get_communication(call):
     try:
-        # Пытаемся десериализовать данные из JSON
-        data_ids = json.loads(message.web_app_data.data)
-        button_text = message.web_app_data.button_text
-        if isinstance(data_ids, list):
-            if button_text == '📟  Выбрать способы связи':
-                # Обработка полученных данных
-                comm_methods = ", ".join(data_ids)
-                bot.send_message(message.chat.id, f"Выбранные способы связи: {comm_methods}",
-                                 parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
+        # global selected_methods
+        # Список специализаций
+        methods = get_methods_list_name_from_wix()
 
-                bot.set_state(message.from_user.id, UserInfoState.communication, message.chat.id)
-                with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-                    data['comm_methods'] = data_ids
-                    data['current_method_index'] = 0
-                    data['contact_info'] = []
+        method = call.data.split(':')[1]
 
-                request_body = {
-                    "dataCollectionId": COLLECTION_USERS,
-                    "referringItemFieldName": USER_PREF_CONTACT,
-                    "referringItemId": data.get('id'),
-                    "newReferencedItemIds": [DEFAULT_METHODS_DICT.get(method) for method in data_ids]
-                }
-                replace_data_item_reference(request_body)
+        with bot.retrieve_data(call.from_user.id) as data:
+            if not data.get('is_selected_methods'):
+                selected_methods = clean_selected_methods()
+                data['selected_methods'] = selected_methods
+            else:
+                selected_methods = data.get('selected_methods', {})
 
-                request_method_contacts(message)
+        if method in methods:
+            # Обработка выбора/отмены выбора специализации
+            selected_methods[method] = not selected_methods.get(method)
 
-    except json.JSONDecodeError:
-        logging.error(f"Ошибка при обработке данных из веб-приложения {message.chat.id}")
+            data['is_selected_methods'] = True
+
+            # Обновите клавиатуру после изменения выбора
+            bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                          reply_markup=request_communication(methods, selected_methods))
+
+        elif 'confirm' in method and any(map(bool, selected_methods.values())):
+            bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                          reply_markup=None)
+
+            # Обработка подтверждения выбора
+            selected_methods_list = [spec for spec, is_selected in selected_methods.items() if
+                                     is_selected]
+
+            bot.send_message(call.message.chat.id, f"Выбранные способы связи: {selected_methods_list}",
+                             parse_mode='Markdown', reply_markup=None)
+
+            bot.set_state(call.from_user.id, UserInfoState.communication)
+            with bot.retrieve_data(call.from_user.id) as data:
+                data['selected_methods_list'] = selected_methods_list
+                data['current_method_index'] = 0
+                data['contact_info'] = []
+
+            request_body = {
+                "dataCollectionId": COLLECTION_USERS,
+                "referringItemFieldName": USER_PREF_CONTACT,
+                "referringItemId": data.get('id'),
+                "newReferencedItemIds": [DEFAULT_METHODS_DICT.get(method) for method in selected_methods_list]
+            }
+            replace_data_item_reference(request_body)
+
+            request_method_contacts(call)
+
+        else:
+
+            bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                          reply_markup=None)
+            bot.send_message(call.message.chat.id,
+                             f"Вы не указали способы связи!!")
+
+            bot.send_message(
+                call.message.chat.id, get_default_template_dict_from_wix('NO_CONTACT_SELECTED'),
+                parse_mode='Markdown',
+                reply_markup=request_communication(get_methods_list_name_from_wix(), clean_selected_methods()))
+
+
     except Exception as e:
         logging.exception(e)
 
 
-def request_method_contacts(message: Message):
+def request_method_contacts(call):
     global communication_message
     try:
-        with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
-            comm_methods = data.get('comm_methods')
+        with bot.retrieve_data(call.from_user.id) as data:
+            comm_methods = data.get('selected_methods_list')
             index = data.get('current_method_index', 0)
 
         if index < len(comm_methods):
@@ -225,24 +268,24 @@ def request_method_contacts(message: Message):
 
             if method == 'Telegram':
                 communication_message = bot.send_message(
-                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('CONTACT_TELEGRAM_TEXT'),
+                    call.from_user.id, DEFAULT_TEMPLATE_DICT.get('CONTACT_TELEGRAM_TEXT'),
                     parse_mode='Markdown', reply_markup=request_telegram())
 
             elif method == 'WhatsApp':
                 communication_message = bot.send_message(
-                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('CONTACT_WHATSAPP_TEXT'), parse_mode='Markdown', )
+                    call.from_user.id, DEFAULT_TEMPLATE_DICT.get('CONTACT_WHATSAPP_TEXT'), parse_mode='Markdown', )
 
             elif method == 'Телефон':
                 communication_message = bot.send_message(
-                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('CONTACT_PHONE_TEXT'), parse_mode='Markdown', )
+                    call.from_user.id, DEFAULT_TEMPLATE_DICT.get('CONTACT_PHONE_TEXT'), parse_mode='Markdown', )
 
             elif method == 'Почта':
                 communication_message = bot.send_message(
-                    message.chat.id, DEFAULT_TEMPLATE_DICT.get('CONTACT_EMAIL_TEXT'), parse_mode='Markdown', )
+                    call.from_user.id, DEFAULT_TEMPLATE_DICT.get('CONTACT_EMAIL_TEXT'), parse_mode='Markdown', )
         else:
 
-            bot.set_state(message.from_user.id, UserInfoState.last, message.chat.id)
-            with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+            bot.set_state(call.from_user.id, UserInfoState.last, )
+            with bot.retrieve_data(call.from_user.id) as data:
                 contact_info = data.get('contact_info', '')
 
             contact_info_str = '\n'.join(contact_info)
@@ -253,8 +296,8 @@ def request_method_contacts(message: Message):
                     "id": data.get('id'),
                     "data": {
                         "_id": data.get('_id'),
-                        USER_TG_NAME: message.from_user.username,
-                        USER_CHAT_ID: message.chat.id,
+                        USER_TG_NAME: call.from_user.username,
+                        USER_CHAT_ID: data.get('chat_id'),
                         USER_DIF_SPEC: data.get('user_dif_spec', ''),
                         USER_DIF_CITY: data.get('user_dif_city', ''),
                         USER_CONTACT_INFO: contact_info_str
@@ -263,7 +306,7 @@ def request_method_contacts(message: Message):
             }
             save_data_item(request_body)
 
-            bot.send_message(message.from_user.id, DEFAULT_TEMPLATE_DICT.get('COMMUNICATION_MESSAGE'),
+            bot.send_message(call.from_user.id, DEFAULT_TEMPLATE_DICT.get('COMMUNICATION_MESSAGE'),
                              parse_mode='Markdown')
     except Exception as e:
         logging.exception(e)
@@ -275,7 +318,7 @@ def get_contact(message: Message) -> None:
     try:
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
             contact_info = data.get('contact_info')
-            comm_methods = data.get('comm_methods')
+            comm_methods = data.get('selected_methods_list')
             index = data.get('current_method_index', 0)
 
         if message.content_type == 'contact':
@@ -335,7 +378,7 @@ def get_contact(message: Message) -> None:
 def get_bot_user_name(message: Message) -> None:
     try:
         # Проверка, что текст содержит только буквы, пробелы и, возможно, точку
-        if re.match(r'^[\w\s.]+$', message.text, flags=re.UNICODE):
+        if re.match(r'^[^\d]+$', message.text, flags=re.UNICODE):
             # Удаление точки из текста
             cleaned_text = message.text.replace('.', '')
 

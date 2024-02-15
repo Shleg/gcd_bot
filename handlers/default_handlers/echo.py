@@ -1,4 +1,3 @@
-
 from telebot import types
 from telebot.types import Message
 
@@ -9,8 +8,7 @@ from database.config_data import COLLECTION_USERS, USER_TG_NAME, USER_CHAT_ID, U
 from database.data import DEFAULT_TEMPLATE_DICT, save_data_item, replace_data_item_reference, DEFAULT_CITY_DICT
 from handlers.custom_handlers.referral import send_next_research, select_researches
 from handlers.default_handlers.start import bot_start
-from keyboards.inline.inline import request_role, request_phase, request_condition, request_city
-from keyboards.reply.web_app import request_communication
+from keyboards.inline.inline import request_role, request_phase, request_condition, request_city, request_communication
 from loader import bot
 from states.user_states import UserInfoState
 from utils.functions import get_cities_list_name_from_wix, clean_selected_cities
@@ -20,17 +18,20 @@ from utils.functions import get_cities_list_name_from_wix, clean_selected_cities
 @bot.message_handler(state=None)
 def bot_echo(message: Message):
     state = bot.get_state(message.from_user.id, message.chat.id)
+    with bot.retrieve_data(message.from_user.id) as data:
+        message_to_remove = data['message_to_remove']
 
     if state == UserInfoState.initial.name:
         # Удаление клавиатуры
-        bot.edit_message_reply_markup(message.chat.id, message.message_id - 1, reply_markup=None)
+        bot.edit_message_reply_markup(message.chat.id, message_to_remove.message_id, reply_markup=None)
         bot.reply_to(
             message, "Вы не выбрали роль!")
-        bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'), reply_markup=request_role())
+        data['message_to_remove'] = bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('ROLE_TEXT'),
+                                                     reply_markup=request_role())
 
     elif state == UserInfoState.role.name:
         # Удаление клавиатуры
-        bot.edit_message_reply_markup(message.chat.id, message.message_id - 1, reply_markup=None)
+        bot.edit_message_reply_markup(message.chat.id, message_to_remove.message_id, reply_markup=None)
 
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
             data['user_dif_spec'] = message.text
@@ -62,8 +63,11 @@ def bot_echo(message: Message):
 
             bot.send_message(message.chat.id, f"Ваши специализации: {message.text}",
                              parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
-            bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('CITY_REFERAL_TEXT'),
-                             parse_mode='Markdown', reply_markup=request_city(get_cities_list_name_from_wix(), clean_selected_cities()))
+            data['message_to_remove'] = bot.send_message(message.chat.id,
+                                                         DEFAULT_TEMPLATE_DICT.get('CITY_REFERAL_TEXT'),
+                                                         parse_mode='Markdown',
+                                                         reply_markup=request_city(get_cities_list_name_from_wix(),
+                                                                                   clean_selected_cities()))
             bot.set_state(message.from_user.id, UserInfoState.specialization, message.chat.id)
 
         elif data.get('role') == 'Врач-исследователь':
@@ -93,13 +97,16 @@ def bot_echo(message: Message):
 
             bot.send_message(message.chat.id, f"Ваша область исследований: {message.text}",
                              parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
-            bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('CITY_RESEARCHER_TEXT'),
-                             parse_mode='Markdown', reply_markup=request_city())
+            data['message_to_remove'] = bot.send_message(message.chat.id,
+                                                         DEFAULT_TEMPLATE_DICT.get('CITY_RESEARCHER_TEXT'),
+                                                         parse_mode='Markdown',
+                                                         reply_markup=request_city(get_cities_list_name_from_wix(),
+                                                                                   clean_selected_cities()))
             bot.set_state(message.from_user.id, UserInfoState.area, message.chat.id)
 
     elif state in (UserInfoState.specialization.name, UserInfoState.area.name):
         # Удаление клавиатуры
-        bot.edit_message_reply_markup(message.chat.id, message.message_id - 1, reply_markup=None)
+        bot.edit_message_reply_markup(message.chat.id, message_to_remove.message_id, reply_markup=None)
 
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
             data['user_dif_city'] = message.text
@@ -154,27 +161,28 @@ def bot_echo(message: Message):
 
             bot.set_state(message.from_user.id, UserInfoState.city_area, message.chat.id)
             bot.send_message(message.chat.id, f"Выбранный город: {message.text}",
-                             parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
-            bot.send_message(message.chat.id,
-                             DEFAULT_TEMPLATE_DICT.get('RESEARCH_DIAGNOSIS'), parse_mode='Markdown')
+                             parse_mode='Markdown', reply_markup=None)
+            bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('RESEARCH_DIAGNOSIS'), parse_mode='Markdown')
         else:
 
+            bot.send_message(message.chat.id, f"Выбранный город: {message.text}",
+                             parse_mode='Markdown', reply_markup=None)
             select_researches(message)
 
     elif state == UserInfoState.criteria.name:
         # Удаление клавиатуры
-        bot.edit_message_reply_markup(message.chat.id, message.message_id - 1, reply_markup=None)
+        bot.edit_message_reply_markup(message.chat.id, message_to_remove.message_id, reply_markup=None)
         bot.reply_to(
             message, "Вы не выбрали условия исследования!")
-        bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('RESEARCH_CONDITION'),
+        data['message_to_remove'] = bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('RESEARCH_CONDITION'),
                          reply_markup=request_condition())
 
     elif state == UserInfoState.conditions.name:
         # Удаление клавиатуры
-        bot.edit_message_reply_markup(message.chat.id, message.message_id - 1, reply_markup=None)
+        bot.edit_message_reply_markup(message.chat.id, message_to_remove, reply_markup=None)
         bot.reply_to(
             message, "Вы не выбрали фазу исследования!")
-        bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('PHASE_TEXT'), reply_markup=request_phase())
+        data['message_to_remove'] = bot.send_message(message.chat.id, DEFAULT_TEMPLATE_DICT.get('PHASE_TEXT'), reply_markup=request_phase())
 
     elif state == UserInfoState.phase.name:
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
@@ -209,7 +217,7 @@ def bot_echo(message: Message):
         bot.set_state(message.from_user.id, UserInfoState.drugs, message.chat.id)
         bot.send_message(message.chat.id, f"Указанные препараты: {message.text}",
                          parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
-        bot.send_message(message.chat.id,
+        data['message_to_remove'] = bot.send_message(message.chat.id,
                          DEFAULT_TEMPLATE_DICT.get('REQUEST_COMMUNICATION_TEXT'),
                          parse_mode='Markdown', reply_markup=request_communication())
 
@@ -227,6 +235,10 @@ def bot_echo(message: Message):
             message, "Вы полностью прошли опрос!\nДля перезапуска выберите команду или введите команду '/start'"
         )
     elif state in (UserInfoState.clinic_research.name, UserInfoState.no_clinic_research.name):
+        # Удаление клавиатуры
+        bot.edit_message_reply_markup(message.chat.id, message_to_remove.message_id, reply_markup=None)
+        bot.reply_to(
+            message, "Вы не указали способы связи!")
         send_next_research(message)
 
     elif state is None:

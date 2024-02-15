@@ -7,8 +7,7 @@ from database.data import COLLECTION_RESEARCHES_BODY, DEFAULT_ROLE_DICT, DEFAULT
     DEFAULT_TEMPLATE_DICT, save_data_item
 from database.data import query_full_data_item, get_data_item
 
-from keyboards.reply.web_app import request_communication
-from keyboards.inline.inline import request_doctor_contact, request_specialization, request_city
+from keyboards.inline.inline import request_doctor_contact, request_specialization, request_city, request_communication
 
 from loader import bot
 from states.user_states import UserInfoState
@@ -16,20 +15,24 @@ from telebot.types import Message
 from telebot import types
 
 from utils.functions import clean_selected_specs, get_specs_list_from_wix, get_specs_list_name_from_wix, \
-    clean_selected_cities, get_cities_list_name_from_wix, get_default_template_dict_from_wix
+    clean_selected_cities, get_cities_list_name_from_wix, get_default_template_dict_from_wix, \
+    get_methods_list_name_from_wix, clean_selected_methods
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('role:Врач-реферал'), state=UserInfoState.initial)
-def callback_handler(call) -> None:
+def get_role(call) -> None:
     try:
-        data = call.data
+        call_data = call.data
 
-        if data.startswith('role:'):
+        with bot.retrieve_data(call.from_user.id) as data:
+            message_to_remove = data['message_to_remove']
+
+        if call_data.startswith('role:'):
 
             # Удаление клавиатуры
-            bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+            bot.edit_message_reply_markup(call.message.chat.id, message_to_remove.message_id, reply_markup=None)
 
-            role = data.split(':')[1]  # Получаем роль после префикса
+            role = call_data.split(':')[1]  # Получаем роль после префикса
             if role in DEFAULT_ROLE_DICT.keys():
                 # bot.answer_callback_query(call.id)
                 # bot.send_message(call.message.chat.id, f"Вы выбрали роль: {role}")
@@ -47,7 +50,7 @@ def callback_handler(call) -> None:
                 }
                 replace_data_item_reference(request_body)
 
-                bot.send_message(
+                data['message_to_remove'] = bot.send_message(
                     call.message.chat.id, get_default_template_dict_from_wix('SPEC_TEXT'),
                     parse_mode='Markdown',
                     reply_markup=request_specialization(get_specs_list_name_from_wix(), clean_selected_specs())
@@ -56,26 +59,25 @@ def callback_handler(call) -> None:
         logging.exception(e)
 
 
-selected_cities = clean_selected_cities()
-
-
 @bot.callback_query_handler(func=lambda call: call.data.startswith('city'), state=UserInfoState.specialization)
 def get_city(call) -> None:
     try:
-        global selected_cities
         # Список специализаций
         cities = get_cities_list_name_from_wix()
         city = call.data.split(':')[1]
 
         with bot.retrieve_data(call.from_user.id) as data:
-            if not data.get('selected_cities'):
+            if not data.get('is_selected_cities'):
                 selected_cities = clean_selected_cities()
+                data['selected_cities'] = selected_cities
+            else:
+                selected_cities = data.get('selected_cities', {})
 
         if city in cities:
             # Обработка выбора/отмены выбора специализации
             selected_cities[city] = not selected_cities.get(city)
 
-            data['selected_cities'] = True
+            data['is_selected_cities'] = True
 
             # Обновите клавиатуру после изменения выбора
             bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
@@ -136,7 +138,7 @@ def get_city(call) -> None:
             bot.send_message(call.message.chat.id,
                              f"Вы не указали город!!")
 
-            bot.send_message(
+            data['message_to_remove'] = bot.send_message(
                 call.message.chat.id, get_default_template_dict_from_wix('CITY_REFERAL_TEXT'),
                 parse_mode='Markdown',
                 reply_markup=request_city(get_cities_list_name_from_wix(), clean_selected_cities())
@@ -251,9 +253,10 @@ def select_researches(call):
 
             city_str = data.get('user_dif_city') or ' ,'.join(data.get('city'))
             spec_str = data.get('user_dif_spec') or ' ,'.join(data.get('spec'))
-            bot.send_message(call.from_user.id,
+            data['message_to_remove'] = bot.send_message(call.from_user.id,
                              DEFAULT_TEMPLATE_DICT.get('NO_SELECTED_TEXT').format(city_str, spec_str),
-                             parse_mode='Markdown', reply_markup=request_communication())
+                             parse_mode='Markdown', reply_markup=request_communication(get_methods_list_name_from_wix(),
+                                                                                       clean_selected_methods()))
     except Exception as e:
         logging.exception(e)
 
@@ -284,7 +287,10 @@ def send_next_research(call):
                 # text = DEFAULT_TEMPLATE_DICT.get('REQUEST_COMMUNICATION_TEXT_NO_RESEARCH').format(city_str, spec_str)
                 text = DEFAULT_TEMPLATE_DICT.get('REQUEST_COMMUNICATION_TEXT_NO_RESEARCH')
 
-                bot.send_message(call.from_user.id, text, parse_mode='Markdown', reply_markup=request_communication())
+                data['message_to_remove'] = bot.send_message(call.from_user.id, text, parse_mode='Markdown',
+                                                             reply_markup=request_communication(
+                                                                 get_methods_list_name_from_wix(),
+                                                                 clean_selected_methods()))
             else:
 
                 checked_researches = data.get('checked_researches', [])
@@ -299,10 +305,12 @@ def send_next_research(call):
 
                     data['research_writed'] = True
 
-                bot.send_message(call.from_user.id,
-                                 DEFAULT_TEMPLATE_DICT.get('REQUEST_COMMUNICATION_TEXT').format(data.get('city'),
-                                                                                                data.get('spec')),
-                                 parse_mode='Markdown', reply_markup=request_communication())
+                data['message_to_remove'] = bot.send_message(call.from_user.id,
+                                                             DEFAULT_TEMPLATE_DICT.get(
+                                                                 'REQUEST_COMMUNICATION_TEXT').format(data.get('city'),
+                                                                                                      data.get('spec')),
+                                                             parse_mode='Markdown', reply_markup=request_communication(
+                        get_methods_list_name_from_wix(), clean_selected_methods()))
 
     except Exception as e:
         logging.exception(e)

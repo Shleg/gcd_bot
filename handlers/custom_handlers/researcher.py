@@ -11,13 +11,13 @@ from database.config_data import COLLECTION_USERS, USER_ROLE_IDs, USER_CITY_ID, 
     USER_DIF_SPEC, USER_DIF_CITY, RESEARCHES_DIF_DRUGS
 from database.data import DEFAULT_TEMPLATE_DICT, DEFAULT_ROLE_DICT, replace_data_item_reference, DEFAULT_CITY_DICT, \
     save_data_item, DEFAULT_CONDITION_DICT, DEFAULT_PHASES_DICT, DEFAULT_DRUGS_DICT
-from keyboards.inline.inline import request_condition, request_phase, request_specialization, request_city, request_drugs
-from keyboards.reply.web_app import request_communication
+from keyboards.inline.inline import request_condition, request_phase, request_specialization, request_city, \
+    request_communication, request_drugs
 from loader import bot
 from states.user_states import UserInfoState
 from utils.functions import get_specs_list_name_from_wix, clean_selected_specs, clean_selected_cities, \
     get_cities_list_name_from_wix, get_default_template_dict_from_wix, clean_selected_drugs, \
-    get_drugs_list_name_from_wix
+    get_drugs_list_name_from_wix, get_methods_list_name_from_wix, clean_selected_methods
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('role:Врач-исследователь'),
@@ -26,8 +26,11 @@ def callback_handler(call) -> None:
     try:
         message_data = call.data
 
+        with bot.retrieve_data(call.from_user.id) as data:
+            message_to_remove = data['message_to_remove']
+
         # Удаление клавиатуры
-        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id, reply_markup=None)
+        bot.edit_message_reply_markup(call.message.chat.id, message_to_remove.message_id, reply_markup=None)
 
         role = message_data.split(':')[1]  # Получаем роль после префикса
 
@@ -69,7 +72,7 @@ def callback_handler(call) -> None:
         }
         replace_data_item_reference(request_body_users)
 
-        bot.send_message(
+        data['message_to_remove'] = bot.send_message(
             call.message.chat.id, DEFAULT_TEMPLATE_DICT.get('AREA_TEXT'),
             parse_mode='Markdown',
             reply_markup=request_specialization(get_specs_list_name_from_wix(), clean_selected_specs())
@@ -77,9 +80,6 @@ def callback_handler(call) -> None:
 
     except Exception as e:
         logging.exception(e)
-
-
-selected_area_cities = clean_selected_cities()
 
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('city'), state=UserInfoState.area)
@@ -92,14 +92,17 @@ def get_city(call) -> None:
         city = call.data.split(':')[1]
 
         with bot.retrieve_data(call.from_user.id) as data:
-            if not data.get('selected_area_cities'):
+            if not data.get('is_selected_area_cities'):
                 selected_area_cities = clean_selected_cities()
+                data['selected_area_cities'] = selected_area_cities
+            else:
+                selected_area_cities = data.get('selected_area_cities', {})
 
         if city in cities:
             # Обработка выбора/отмены выбора города
             selected_area_cities[city] = not selected_area_cities.get(city)
 
-            data['selected_area_cities'] = True
+            data['is_selected_area_cities'] = True
 
             # Обновите клавиатуру после изменения выбора
             bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
@@ -312,26 +315,26 @@ def get_condition(call) -> None:
         )
 
 
-selected_drugs = clean_selected_drugs()
-
-
 @bot.callback_query_handler(func=lambda call: call.data.startswith('drug:'), state=UserInfoState.phase)
 def get_drugs(call) -> None:
     try:
-        global selected_drugs
+
         # Список специализаций
         drugs = get_drugs_list_name_from_wix()
         drug = call.data.split(':')[1]
 
         with bot.retrieve_data(call.from_user.id) as data:
-            if not data.get('selected_drugs'):
+            if not data.get('is_selected_drugs'):
                 selected_drugs = clean_selected_drugs()
+                data['selected_drugs'] = selected_drugs
+            else:
+                selected_drugs = data.get('selected_drugs', {})
 
         if drug in drugs:
             # Обработка выбора/отмены выбора специализации
             selected_drugs[drug] = not selected_drugs.get(drug)
 
-            data['selected_drugs'] = True
+            data['is_selected_drugs'] = True
 
             # Обновите клавиатуру после изменения выбора
             bot.edit_message_reply_markup(chat_id=call.message.chat.id, message_id=call.message.message_id,
@@ -380,7 +383,8 @@ def get_drugs(call) -> None:
 
             bot.send_message(call.from_user.id,
                              DEFAULT_TEMPLATE_DICT.get('REQUEST_COMMUNICATION_TEXT'),
-                             parse_mode='Markdown', reply_markup=request_communication())
+                             parse_mode='Markdown', reply_markup=request_communication(get_methods_list_name_from_wix(),
+                                                                                       clean_selected_methods()))
 
         else:
 

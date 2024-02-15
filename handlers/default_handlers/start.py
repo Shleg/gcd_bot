@@ -65,14 +65,25 @@ def bot_start(message: Message):
                     data['chat_id'] = user['dataItem']['data']['tgChatId']
                     data['user_dif_spec'] = ''
                     data['user_dif_city'] = ''
-                    data['spec'] = ''
-                    data['city'] = ''
+                    data['role'] = ''
                     data['selected_specializations'] = False
-                    data['selected_cities'] = False
-                    data['selected_area_cities'] = False
-                    data['selected_drugs'] = False
+                    data['area'] = None
+                    data['spec'] = None
+                    data['is_selected_cities'] = False
+                    data['selected_cities'] = []
+                    data['is_selected_area_cities'] = False
+                    data['selected_area_cities'] = []
+                    data['is_selected_drugs'] = False
+                    data['selected_drugs'] = []
+                    data['is_selected_methods'] = False
                     data['suitable_researches'] = []
+                    data['suitable_research'] = ''
                     data['checking_research'] = None
+                    # очистка данный для обработчика @bot.message_handler(content_types=['text', 'contact'], state=UserInfoState.communication)
+                    data['contact_info'] = ''
+                    data['selected_methods_list'] = []
+                    # очистка для обработчика @bot.message_handler(content_types=['text'], state=UserInfoState.last)
+                    data['name'] = ''
 
                 request_body = {
                     "dataCollectionId": COLLECTION_USERS,
@@ -93,7 +104,7 @@ def bot_start(message: Message):
                         message.chat.id,
                         get_default_template_dict_from_wix('RETURN_TEXT').format(message.from_user.full_name),
                         parse_mode='Markdown')
-                    bot.send_message(message.chat.id, get_default_template_dict_from_wix('ROLE_TEXT'),
+                    data['message_to_remove'] = bot.send_message(message.chat.id, get_default_template_dict_from_wix('ROLE_TEXT'),
                                      parse_mode='Markdown', reply_markup=request_role())
 
         else:
@@ -117,14 +128,28 @@ def bot_start(message: Message):
                 data['tg_name'] = new_user['dataItem']['data']['tgName']
                 data['user_dif_spec'] = ''
                 data['user_dif_city'] = ''
-                data['selected_specializations'] = False
-                data['selected_cities'] = False
-                data['selected_area_cities'] = False
-                data['selected_drugs'] = False
+                data['role'] = ''
+                data['is_selected_specializations'] = False
+                data['selected_specializations'] = []
+                data['area'] = None
+                data['spec'] = None
+                data['is_selected_cities'] = False
+                data['selected_cities'] = []
+                data['is_selected_area_cities'] = False
+                data['selected_area_cities'] = []
+                data['is_selected_drugs'] = False
+                data['selected_drugs'] = []
+                data['is_selected_methods'] = False
                 data['suitable_researches'] = []
+                data['suitable_research'] = ''
                 data['checking_research'] = None
+                # очистка данный для обработчика @bot.message_handler(content_types=['text', 'contact'], state=UserInfoState.communication)
+                data['contact_info'] = ''
+                data['selected_methods_list'] = []
+                # очистка для обработчика @bot.message_handler(content_types=['text'], state=UserInfoState.last)
+                data['name'] = ''
 
-            bot.send_message(message.chat.id, get_default_template_dict_from_wix('ROLE_TEXT'), parse_mode='Markdown',
+            data['message_to_remove'] = bot.send_message(message.chat.id, get_default_template_dict_from_wix('ROLE_TEXT'), parse_mode='Markdown',
                              reply_markup=request_role())
     except Exception as e:
         logging.exception(e)

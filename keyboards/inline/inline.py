@@ -145,16 +145,19 @@ def request_phase() -> InlineKeyboardMarkup:
 
 def request_communication(contact_methods, selected_contact_methods):
     keyboard = InlineKeyboardMarkup()
+    buttons_list = []
 
-
-    for method in contact_methods:
+    for method in contact_methods[::-1]:
         # Получаем текущее состояние выбора специализации
         is_selected = selected_contact_methods.get(method)
 
         # Создаем кнопку для каждой специализации с зеленой галочкой, если выбрана
         button_text = f"✅ {method}" if is_selected else method
         button = InlineKeyboardButton(button_text, callback_data=f'method:{method}')
-        keyboard.add(button)
+        buttons_list.append(button)
+
+    for i in range(0, len(buttons_list), 2):
+        keyboard.add(*buttons_list[i:i + 2])
 
     # Добавляем кнопку для подтверждения выбора
     confirm_button = InlineKeyboardButton("👍 Подтвердить выбор", callback_data="method:confirm")
