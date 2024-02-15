@@ -18,7 +18,7 @@ def bot_start(message: Message):
     try:
 
         bot.reply_to(message, get_default_template_dict_from_wix('WELCOME_TEXT_1').format(message.from_user.full_name),
-                     parse_mode='Markdown', reply_markup=types.ReplyKeyboardRemove())
+                     parse_mode='Markdown', reply_markup=None)
 
         time.sleep(0.5)
 
