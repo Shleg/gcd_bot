@@ -14,8 +14,8 @@ from states.user_states import UserInfoState
 from telebot.types import Message
 from telebot import types
 
-from utils.functions import clean_selected_specs, get_specs_list_from_wix, get_specs_list_name_from_wix, \
-    clean_selected_cities, get_cities_list_name_from_wix, get_default_template_dict_from_wix, \
+from utils.functions import clean_selected_specs, get_specs_list_name_from_wix, \
+    clean_selected_cities, get_cities_list_name_from_wix, \
     get_methods_list_name_from_wix, clean_selected_methods, get_default_role_dict_from_wix
 
 
