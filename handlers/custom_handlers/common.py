@@ -11,7 +11,7 @@ from database.config_data import COLLECTION_USERS, USER_SPEC_IDs, USER_PREF_CONT
     RESEARCH_NAME, RESEARCHES_DIF_SPEC, USER_DIF_CITY
 from database.data import DEFAULT_SPEC_DICT, replace_data_item_reference, save_data_item, DEFAULT_METHODS_DICT, \
     DEFAULT_TEMPLATE_DICT, get_bots_manager_chat_ids
-from keyboards.inline.inline import request_specialization, request_city
+from keyboards.inline.inline import request_specialization, request_city, request_communication
 from keyboards.reply.web_app import request_telegram
 from loader import bot
 from states.user_states import UserInfoState

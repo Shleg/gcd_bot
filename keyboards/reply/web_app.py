@@ -52,23 +52,23 @@ def request_telegram() -> ReplyKeyboardMarkup:
 #     return keyboard
 
 
-def request_drugs() -> ReplyKeyboardMarkup:
-    drugs = list(DEFAULT_DRUGS_DICT.keys()) # Список препаратов
-    serialized_data = json.dumps(drugs)
-    encoded_data = urllib.parse.quote(serialized_data)
-
-    web_app_url = f"{BOT_FORM}?data={encoded_data}"
-
-    # Создаем обычную клавиатуру
-    keyboard = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=False)
-
-    # Создаем кнопку для открытия веб-приложения
-    button = KeyboardButton("💊  Выбрать препараты", web_app=WebAppInfo(url=web_app_url))
-
-    # Добавляем кнопку в клавиатуру
-    keyboard.add(button)
-
-    return keyboard
+# def request_drugs() -> ReplyKeyboardMarkup:
+#     drugs = list(DEFAULT_DRUGS_DICT.keys()) # Список препаратов
+#     serialized_data = json.dumps(drugs)
+#     encoded_data = urllib.parse.quote(serialized_data)
+#
+#     web_app_url = f"{BOT_FORM}?data={encoded_data}"
+#
+#     # Создаем обычную клавиатуру
+#     keyboard = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=False)
+#
+#     # Создаем кнопку для открытия веб-приложения
+#     button = KeyboardButton("💊  Выбрать препараты", web_app=WebAppInfo(url=web_app_url))
+#
+#     # Добавляем кнопку в клавиатуру
+#     keyboard.add(button)
+#
+#     return keyboard
 
 
 def request_communication() -> ReplyKeyboardMarkup:
