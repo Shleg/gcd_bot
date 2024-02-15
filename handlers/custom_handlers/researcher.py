@@ -398,7 +398,7 @@ def get_drugs(call) -> None:
                              f"Вы не указали препараты!!")
 
             data['message_to_remove'] = bot.send_message(
-                call.message.chat.id, get_default_template_dict_from_wix('DRUGS_CHOICE_TEXT'),
+                call.message.chat.id, DEFAULT_TEMPLATE_DICT.get('DRUGS_CHOICE_TEXT'),
                 parse_mode='Markdown',
                 reply_markup=request_drugs(get_drugs_list_name_from_wix(), clean_selected_drugs())
             )
