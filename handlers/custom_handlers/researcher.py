@@ -185,7 +185,7 @@ def get_city(call) -> None:
                              f"Вы не указали город!!")
 
             bot.send_message(
-                call.from_user.id, get_default_template_dict_from_wix('NO_CITY_SELECTED'),
+                call.from_user.id, DEFAULT_TEMPLATE_DICT.get('NO_CITY_SELECTED'),
                 parse_mode='Markdown',
                 reply_markup=request_city(get_cities_list_name_from_wix(), clean_selected_cities())
             )
